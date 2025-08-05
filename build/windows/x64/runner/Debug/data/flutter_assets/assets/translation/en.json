@@ -1,0 +1,11 @@
+{
+    "login.title":"Login",
+    "login.button":"Login",
+    "login.signup":"Sign up",
+    "login.forgot":"Forgot password?",
+    "email":"Email",
+    "password":"Password",
+    "home.welcome":"Welcome, {}",
+    "home.content":"This is the home page"
+  }
+  
