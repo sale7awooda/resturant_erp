@@ -66,21 +66,21 @@ class _MainLayoutState extends State<MainLayout> {
               // compactSideMenuWidth: 100.w,
               displayMode: SideMenuDisplayMode.auto,
               showHamburger: true,
-              hoverColor: Colors.blue.shade500,
-              selectedHoverColor: Colors.blue.shade600,
-              selectedColor: Colors.blue,
+              hoverColor: clrLightGrey, // Colors.blue.shade500,
+              selectedHoverColor: clrGrey, //Colors.blue.shade600,
+              selectedColor: clrMainAppClr,
               selectedTitleTextStyle:
                   const TextStyle(color: clrWhite, fontWeight: FontWeight.w600),
               selectedIconColor: Colors.white,
-              unselectedTitleTextStyle:
-                  const TextStyle(color: clrBlack, fontWeight: FontWeight.w400),
-              unselectedIconColor: clrBlack,
+              unselectedTitleTextStyle: const TextStyle(
+                  color: clrMainAppClr, fontWeight: FontWeight.w400),
+              unselectedIconColor: clrMainAppClr,
             ),
             title: Column(
               children: [
                 // gapH10,
                 CircleAvatar(
-                  backgroundColor: clrBlue,
+                  backgroundColor: clrMainAppClrLight,
                   minRadius: 40.w,
                   child: TxtWidget(txt: 'LOGO'),
                 ),

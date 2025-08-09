@@ -3,28 +3,29 @@ import 'package:flutter/material.dart';
 late String? hex;
 // final Color clrMainSeed = Colors.white;
 const Color clrGreen = Colors.green;
-Color clrMainAppClr = Colors.green; //parseColor('#58c3ed');
+const Color clrMainAppClr = Colors.blue;
+const Color clrMainAppClrLight = Color.fromRGBO(144, 202, 249, 1); //parseColor('#58c3ed');
 const Color clrLightGreen = Color.fromRGBO(197, 240, 143, 1);
 const Color clrDarkGreen = Color.fromRGBO(74, 124, 14, 1);
 const Color clrRed = Colors.red; // Color.fromRGBO(174, 28, 18, 1);
-const Color clrLightRed = Color.fromARGB(255, 248, 124, 115);
+const Color clrLightRed = Color.fromRGBO(244, 144, 136, 1);
 const Color clrWhite = Colors.white;
 const Color clrGrey = Colors.grey;
-const Color clrLightGrey = Color.fromARGB(255, 239, 239, 239);
+const Color clrLightGrey = Color.fromRGBO(239, 239, 239, 1);
 const Color clrBlack = Colors.black;
-const Color clrLightBlack = Color.fromARGB(255, 70, 67, 67);
+const Color clrLightBlack = Color.fromRGBO(95, 92, 92, 1);
 const Color clrpurble = Colors.purple;
 const Color clrBlue = Colors.blue;
-const Color clrLightBlue = Color.fromARGB(255, 123, 193, 251);
+const Color clrLightBlue = Color.fromRGBO(144, 202, 249, 1);
 const Color clrYellow = Colors.yellow;
-const Color clrLightYellow = Color.fromARGB(255, 255, 241, 120);
+const Color clrLightYellow = Color.fromRGBO(246, 235, 133, 1);
 const Color clrOrange = Colors.orange;
-const Color clrLightOrange = Color.fromARGB(255, 253, 201, 123);
+const Color clrLightOrange = Color.fromRGBO(252, 206, 137, 1);
 const Color clrAmber = Colors.amberAccent;
 // const Color clrHEX = Color();
 
 class AppConstants {
-  final String appName = "Resturant Manager";
+  final String appName = "ResturantManager";
   final Color appMainClr = Colors.blue;
   // parseColor('#58c3ed'); // Colors.lightGreen;
   // final String baseURL =

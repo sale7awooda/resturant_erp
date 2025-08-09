@@ -98,10 +98,6 @@ lints
 3.6
 file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/lints-5.1.1/
 file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/lints-5.1.1/lib/
-logger
-2.12
-file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/logger-1.4.0/
-file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/logger-1.4.0/lib/
 logging
 3.4
 file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/logging-1.3.0/
@@ -234,6 +230,10 @@ sqflite_common
 3.5
 file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_common-2.5.4+6/
 file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_common-2.5.4+6/lib/
+sqflite_common_ffi
+3.5
+file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_common_ffi-2.3.4+4/
+file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_common_ffi-2.3.4+4/lib/
 sqflite_darwin
 3.5
 file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_darwin-2.4.1+1/
@@ -242,6 +242,10 @@ sqflite_platform_interface
 3.5
 file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_platform_interface-2.4.0/
 file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_platform_interface-2.4.0/lib/
+sqlite3
+3.5
+file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqlite3-2.9.0/
+file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqlite3-2.9.0/lib/
 stack_trace
 3.4
 file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/stack_trace-1.12.0/
@@ -270,6 +274,10 @@ test_api
 3.4
 file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/test_api-0.7.3/
 file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/test_api-0.7.3/lib/
+typed_data
+3.5
+file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/typed_data-1.4.0/
+file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/typed_data-1.4.0/lib/
 vector_math
 2.14
 file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/vector_math-2.1.4/

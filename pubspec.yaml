@@ -17,12 +17,13 @@ dependencies:
   flutter_screenutil: ^5.9.3
   # flutter_side_menu: ^0.5.41
   go_router: ^7.0.0
-  logger: ^1.0.0
+  # logger: ^1.0.0
   path: ^1.8.0
   path_provider: ^2.1.5
   responsive_framework: ^0.2.0 
   sqflite: ^2.0.0
   # supabase_flutter: ^2.9.1
+  sqflite_common_ffi: ^2.3.4+4
   window_manager: ^0.5.1
 
 dev_dependencies:

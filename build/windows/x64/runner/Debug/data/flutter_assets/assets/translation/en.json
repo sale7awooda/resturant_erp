@@ -1,6 +1,17 @@
 {
-  "Resturant Manager": "Resturant Manager",
+  "ResturantManager": "Resturant Manager",
   "Resturant Manager Description": " Manage your restaurant by adding and managing products, updating restaurant information, orders, and monitoring orders.",
+  "My App Name": "My App Name",
   "Splash Screen": "Splash Screen",
-  "home Screen": "Home Screen"
+  "home Screen": "Home Screen",
+  "Dashboard": "Dashboard",
+  "Menu": "Menu",
+  "Orders List": "Orders List",
+  "Bills": "Bills",
+  "Inventory": "Inventory",
+  "History": "History",
+  "Staff": "Staff",
+  "Reports": "Reports",
+  "Logs": "Logs",
+  "Settings": "Settings","Sign Out":"Sign Out","Sign In":"Sign In"
 }

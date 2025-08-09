@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:starter_template/core/constants.dart';
 import 'package:window_manager/window_manager.dart';
 import 'core/router/app_router.dart';
@@ -11,8 +13,16 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
   await windowManager.ensureInitialized();
+
+  if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
   WindowOptions options = WindowOptions(
-      size: Size(1200, 800), center: true, title: AppConstants().appName.tr());
+      minimumSize: Size(800, 800),
+      size: Size(1200, 800),
+      center: true,
+      title: tr(AppConstants().appName));
   windowManager.waitUntilReadyToShow(options, () {
     windowManager.show();
     windowManager.focus();
@@ -37,9 +47,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ScreenUtilInit(
       designSize: const Size(1200, 800),
+      splitScreenMode: false,
       minTextAdapt: true,
       builder: (_, __) => MaterialApp.router(
-        title: tr(AppConstants().appName),
+        // title: tr(AppConstants().appName),
         routerConfig: goRouter,
         localizationsDelegates: context.localizationDelegates,
         supportedLocales: context.supportedLocales,
@@ -51,10 +62,10 @@ class MyApp extends StatelessWidget {
           // primarySwatch: Colors.blue,
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-            primary: Colors.blue,
+            seedColor: clrMainAppClr,
+            primary: clrMainAppClr,
             surface: clrWhite,
-            secondary: Colors.blueGrey,
+            secondary: clrGrey, // Colors.blueGrey,
           ),
         ),
       ),

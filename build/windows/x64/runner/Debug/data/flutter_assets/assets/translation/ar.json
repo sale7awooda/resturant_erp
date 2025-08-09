@@ -1,6 +1,19 @@
 {
-    "Resturant Manager": "مدير المطعم",
+    "ResturantManager": "مدير المطعم",
     "Resturant Manager Description": "قم بإدارة مطعمك من خلال إضافة المنتجات وإدارتها، وتحديث معلومات المطعم والطلبات ومراقبه الطلبات.",
+    "My App Name": "اسم المطعم",
     "Splash Screen": "شاشة البداية",
-    "home Screen":"الشاشة الرئيسية"
+    "home Screen": "الشاشة الرئيسية",
+    "Dashboard": "لوحة العرض",
+    "Menu": "قائمة الطعام",
+    "Orders List": "قائمة الطلبات",
+    "Bills": "الفواتير",
+    "Inventory": "المستودع",
+    "History": "التاريح",
+    "Staff": "الموظفون",
+    "Reports": "التقارير",
+    "Logs": "السجلات",
+    "Settings": "الاعدادات",
+    "Sign Out": "تسجيل خروج",
+    "Sign In": "تسجيل دخول"
 }
