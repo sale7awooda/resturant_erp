@@ -47,7 +47,6 @@
 // }
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:starter_template/core/services/auth_service.dart';
 // import 'auth_controller.dart';
 import 'package:go_router/go_router.dart';
 
@@ -59,7 +58,7 @@ class LoginScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final auth = ref.read(authControllerProvider);
+    // final auth = ref.read(authControllerProvider);
     return Scaffold(
       appBar: AppBar(title: Text('Login')),
       body: Padding(
@@ -70,7 +69,7 @@ class LoginScreen extends ConsumerWidget {
             TextField(controller: _passCtrl, decoration: InputDecoration(labelText: 'Password'), obscureText: true),
             SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => auth.login(_emailCtrl.text, _passCtrl.text),
+              onPressed: () {},
               child: Text('Login'),
             ),
             TextButton(

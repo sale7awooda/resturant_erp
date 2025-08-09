@@ -1,30 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\flutter\flutter-apps\shop_manager\windows\flutter\ephemeral\.plugin_symlinks\app_links\windows\app_links_plugin_c_api.cpp">
+    <ClCompile Include="C:\flutter\flutter-apps\resturant_erp\windows\flutter\ephemeral\.plugin_symlinks\app_links\windows\app_links_plugin_c_api.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\flutter\flutter-apps\shop_manager\windows\flutter\ephemeral\.plugin_symlinks\app_links\windows\app_links_plugin.cpp">
+    <ClCompile Include="C:\flutter\flutter-apps\resturant_erp\windows\flutter\ephemeral\.plugin_symlinks\app_links\windows\app_links_plugin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\flutter\flutter-apps\shop_manager\windows\flutter\ephemeral\.plugin_symlinks\app_links\windows\include\app_links\app_links_plugin_c_api.h">
+    <ClInclude Include="C:\flutter\flutter-apps\resturant_erp\windows\flutter\ephemeral\.plugin_symlinks\app_links\windows\include\app_links\app_links_plugin_c_api.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\flutter\flutter-apps\shop_manager\windows\flutter\ephemeral\.plugin_symlinks\app_links\windows\app_links_plugin.h">
+    <ClInclude Include="C:\flutter\flutter-apps\resturant_erp\windows\flutter\ephemeral\.plugin_symlinks\app_links\windows\app_links_plugin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\flutter\flutter-apps\shop_manager\windows\flutter\ephemeral\.plugin_symlinks\app_links\windows\CMakeLists.txt" />
+    <CustomBuild Include="C:\flutter\flutter-apps\resturant_erp\windows\flutter\ephemeral\.plugin_symlinks\app_links\windows\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{4FB7978D-B619-34BD-BBDF-761B43C98EB7}</UniqueIdentifier>
+      <UniqueIdentifier>{DD57498D-5470-3E5A-BC05-0DC604A5B8E1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{76FB0B2B-ACD6-33D9-82DB-C2597C9B245C}</UniqueIdentifier>
+      <UniqueIdentifier>{37A9DED3-9D21-3241-AE15-9E00A213AA1D}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

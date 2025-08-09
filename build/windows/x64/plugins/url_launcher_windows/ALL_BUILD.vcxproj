@@ -21,7 +21,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{708B3C1E-3793-346B-82F6-591EA05A2F6B}</ProjectGuid>
+    <ProjectGuid>{95E620F1-D822-307E-B151-2F368F3580AF}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <Platform>x64</Platform>
@@ -88,11 +88,11 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\flutter\flutter-apps\shop_manager\windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\windows\CMakeLists.txt">
+    <CustomBuild Include="C:\flutter\flutter-apps\resturant_erp\windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\windows\CMakeLists.txt">
       <UseUtf8Encoding>Always</UseUtf8Encoding>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/flutter/flutter-apps/shop_manager/windows/flutter/ephemeral/.plugin_symlinks/url_launcher_windows/windows/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/flutter/flutter-apps/resturant_erp/windows/flutter/ephemeral/.plugin_symlinks/url_launcher_windows/windows/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/flutter/flutter-apps/shop_manager/windows -BC:/flutter/flutter-apps/shop_manager/build/windows/x64 --check-stamp-file C:/flutter/flutter-apps/shop_manager/build/windows/x64/plugins/url_launcher_windows/CMakeFiles/generate.stamp
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/flutter/flutter-apps/resturant_erp/windows -BC:/flutter/flutter-apps/resturant_erp/build/windows/x64 --check-stamp-file C:/flutter/flutter-apps/resturant_erp/build/windows/x64/plugins/url_launcher_windows/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -101,11 +101,11 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\flutter\flutter-apps\shop_manager\build\windows\x64\plugins\url_launcher_windows\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\flutter\flutter-apps\resturant_erp\build\windows\x64\plugins\url_launcher_windows\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Building Custom Rule C:/flutter/flutter-apps/shop_manager/windows/flutter/ephemeral/.plugin_symlinks/url_launcher_windows/windows/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Building Custom Rule C:/flutter/flutter-apps/resturant_erp/windows/flutter/ephemeral/.plugin_symlinks/url_launcher_windows/windows/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/flutter/flutter-apps/shop_manager/windows -BC:/flutter/flutter-apps/shop_manager/build/windows/x64 --check-stamp-file C:/flutter/flutter-apps/shop_manager/build/windows/x64/plugins/url_launcher_windows/CMakeFiles/generate.stamp
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/flutter/flutter-apps/resturant_erp/windows -BC:/flutter/flutter-apps/resturant_erp/build/windows/x64 --check-stamp-file C:/flutter/flutter-apps/resturant_erp/build/windows/x64/plugins/url_launcher_windows/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -114,11 +114,11 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">C:\flutter\flutter-apps\shop_manager\build\windows\x64\plugins\url_launcher_windows\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">C:\flutter\flutter-apps\resturant_erp\build\windows\x64\plugins\url_launcher_windows\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/flutter/flutter-apps/shop_manager/windows/flutter/ephemeral/.plugin_symlinks/url_launcher_windows/windows/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/flutter/flutter-apps/resturant_erp/windows/flutter/ephemeral/.plugin_symlinks/url_launcher_windows/windows/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/flutter/flutter-apps/shop_manager/windows -BC:/flutter/flutter-apps/shop_manager/build/windows/x64 --check-stamp-file C:/flutter/flutter-apps/shop_manager/build/windows/x64/plugins/url_launcher_windows/CMakeFiles/generate.stamp
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/flutter/flutter-apps/resturant_erp/windows -BC:/flutter/flutter-apps/resturant_erp/build/windows/x64 --check-stamp-file C:/flutter/flutter-apps/resturant_erp/build/windows/x64/plugins/url_launcher_windows/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -127,7 +127,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\flutter\flutter-apps\shop_manager\build\windows\x64\plugins\url_launcher_windows\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\flutter\flutter-apps\resturant_erp\build\windows\x64\plugins\url_launcher_windows\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
@@ -135,14 +135,14 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <ProjectReference Include="C:\flutter\flutter-apps\shop_manager\build\windows\x64\ZERO_CHECK.vcxproj">
-      <Project>{365E395A-B19B-36C4-A242-DD41217AAA9A}</Project>
+    <ProjectReference Include="C:\flutter\flutter-apps\resturant_erp\build\windows\x64\ZERO_CHECK.vcxproj">
+      <Project>{BF033720-0108-3EB4-947F-91A08BF85207}</Project>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="C:\flutter\flutter-apps\shop_manager\build\windows\x64\plugins\url_launcher_windows\url_launcher_windows_plugin.vcxproj">
-      <Project>{8F6354F8-9643-392D-9237-6EEE12AFC5CE}</Project>
+    <ProjectReference Include="C:\flutter\flutter-apps\resturant_erp\build\windows\x64\plugins\url_launcher_windows\url_launcher_windows_plugin.vcxproj">
+      <Project>{7B77AB8A-8FD9-3A90-89D7-D942EFA57E13}</Project>
       <Name>url_launcher_windows_plugin</Name>
     </ProjectReference>
   </ItemGroup>

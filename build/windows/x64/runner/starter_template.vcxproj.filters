@@ -1,33 +1,33 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\flutter\flutter-apps\shop_manager\windows\runner\flutter_window.cpp">
+    <ClCompile Include="C:\flutter\flutter-apps\resturant_erp\windows\runner\flutter_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\flutter\flutter-apps\shop_manager\windows\runner\main.cpp">
+    <ClCompile Include="C:\flutter\flutter-apps\resturant_erp\windows\runner\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\flutter\flutter-apps\shop_manager\windows\runner\utils.cpp">
+    <ClCompile Include="C:\flutter\flutter-apps\resturant_erp\windows\runner\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\flutter\flutter-apps\shop_manager\windows\runner\win32_window.cpp">
+    <ClCompile Include="C:\flutter\flutter-apps\resturant_erp\windows\runner\win32_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\flutter\flutter-apps\shop_manager\windows\flutter\generated_plugin_registrant.cc">
+    <ClCompile Include="C:\flutter\flutter-apps\resturant_erp\windows\flutter\generated_plugin_registrant.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\flutter\flutter-apps\shop_manager\windows\runner\CMakeLists.txt" />
+    <CustomBuild Include="C:\flutter\flutter-apps\resturant_erp\windows\runner\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="C:\flutter\flutter-apps\shop_manager\windows\runner\Runner.rc">
+    <ResourceCompile Include="C:\flutter\flutter-apps\resturant_erp\windows\runner\Runner.rc">
       <Filter>Source Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{76FB0B2B-ACD6-33D9-82DB-C2597C9B245C}</UniqueIdentifier>
+      <UniqueIdentifier>{37A9DED3-9D21-3241-AE15-9E00A213AA1D}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

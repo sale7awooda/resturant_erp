@@ -1,4 +1,4 @@
-# Install script for directory: C:/flutter/flutter-apps/shop_manager/windows/flutter/ephemeral/.plugin_symlinks/app_links/windows
+# Install script for directory: C:/flutter/flutter-apps/resturant_erp/windows/flutter/ephemeral/.plugin_symlinks/app_links/windows
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -35,6 +35,6 @@ endif()
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "C:/flutter/flutter-apps/shop_manager/build/windows/x64/plugins/app_links/install_local_manifest.txt"
+  file(WRITE "C:/flutter/flutter-apps/resturant_erp/build/windows/x64/plugins/app_links/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

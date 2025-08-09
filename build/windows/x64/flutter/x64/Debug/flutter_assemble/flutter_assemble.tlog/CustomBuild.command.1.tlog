@@ -1,6 +1,6 @@
-^C:\FLUTTER\FLUTTER-APPS\SHOP_MANAGER\BUILD\WINDOWS\X64\CMAKEFILES\D0A5EB96815D0A0158DFA037DC96969C\FLUTTER_WINDOWS.DLL.RULE
+^C:\FLUTTER\FLUTTER-APPS\RESTURANT_ERP\BUILD\WINDOWS\X64\CMAKEFILES\9261B97D3D18D8F8107EA1AD441165EA\FLUTTER_WINDOWS.DLL.RULE
 setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E env FLUTTER_ROOT=C:\flutter\flutter_windows_3.27.3-stable\flutter PROJECT_DIR=C:\flutter\flutter-apps\shop_manager FLUTTER_ROOT=C:\flutter\flutter_windows_3.27.3-stable\flutter FLUTTER_EPHEMERAL_DIR=C:\flutter\flutter-apps\shop_manager\windows\flutter\ephemeral PROJECT_DIR=C:\flutter\flutter-apps\shop_manager FLUTTER_TARGET=C:\flutter\flutter-apps\shop_manager\lib\main.dart DART_OBFUSCATION=false TRACK_WIDGET_CREATION=true TREE_SHAKE_ICONS=false PACKAGE_CONFIG=C:\flutter\flutter-apps\shop_manager\.dart_tool\package_config.json C:/flutter/flutter_windows_3.27.3-stable/flutter/packages/flutter_tools/bin/tool_backend.bat windows-x64 Debug
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E env FLUTTER_ROOT=C:\flutter\flutter_windows_3.27.3-stable\flutter PROJECT_DIR=C:\flutter\flutter-apps\resturant_erp FLUTTER_ROOT=C:\flutter\flutter_windows_3.27.3-stable\flutter FLUTTER_EPHEMERAL_DIR=C:\flutter\flutter-apps\resturant_erp\windows\flutter\ephemeral PROJECT_DIR=C:\flutter\flutter-apps\resturant_erp FLUTTER_TARGET=C:\flutter\flutter-apps\resturant_erp\lib\main.dart DART_OBFUSCATION=false TRACK_WIDGET_CREATION=true TREE_SHAKE_ICONS=false PACKAGE_CONFIG=C:\flutter\flutter-apps\resturant_erp\.dart_tool\package_config.json C:/flutter/flutter_windows_3.27.3-stable/flutter/packages/flutter_tools/bin/tool_backend.bat windows-x64 Debug
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
@@ -8,7 +8,7 @@ endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
-^C:\FLUTTER\FLUTTER-APPS\SHOP_MANAGER\BUILD\WINDOWS\X64\CMAKEFILES\2F98444BB0E7620DBA7D5E3133CD46B9\FLUTTER_ASSEMBLE.RULE
+^C:\FLUTTER\FLUTTER-APPS\RESTURANT_ERP\BUILD\WINDOWS\X64\CMAKEFILES\857B8CA97CF4842AC352A46D2109ED64\FLUTTER_ASSEMBLE.RULE
 setlocal
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
@@ -16,9 +16,9 @@ endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
-^C:\FLUTTER\FLUTTER-APPS\SHOP_MANAGER\WINDOWS\FLUTTER\CMAKELISTS.TXT
+^C:\FLUTTER\FLUTTER-APPS\RESTURANT_ERP\WINDOWS\FLUTTER\CMAKELISTS.TXT
 setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/flutter/flutter-apps/shop_manager/windows -BC:/flutter/flutter-apps/shop_manager/build/windows/x64 --check-stamp-file C:/flutter/flutter-apps/shop_manager/build/windows/x64/flutter/CMakeFiles/generate.stamp
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/flutter/flutter-apps/resturant_erp/windows -BC:/flutter/flutter-apps/resturant_erp/build/windows/x64 --check-stamp-file C:/flutter/flutter-apps/resturant_erp/build/windows/x64/flutter/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone

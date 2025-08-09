@@ -1,25 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\flutter\flutter-apps\shop_manager\windows\flutter\ephemeral\cpp_client_wrapper\core_implementations.cc">
+    <ClCompile Include="C:\flutter\flutter-apps\resturant_erp\windows\flutter\ephemeral\cpp_client_wrapper\core_implementations.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\flutter\flutter-apps\shop_manager\windows\flutter\ephemeral\cpp_client_wrapper\standard_codec.cc">
+    <ClCompile Include="C:\flutter\flutter-apps\resturant_erp\windows\flutter\ephemeral\cpp_client_wrapper\standard_codec.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\flutter\flutter-apps\shop_manager\windows\flutter\ephemeral\cpp_client_wrapper\plugin_registrar.cc">
+    <ClCompile Include="C:\flutter\flutter-apps\resturant_erp\windows\flutter\ephemeral\cpp_client_wrapper\plugin_registrar.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\flutter\flutter-apps\shop_manager\windows\flutter\CMakeLists.txt" />
+    <CustomBuild Include="C:\flutter\flutter-apps\resturant_erp\windows\flutter\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
-      <UniqueIdentifier>{BE729451-473E-3406-9F0F-726F34C0AF81}</UniqueIdentifier>
+      <UniqueIdentifier>{A29ADF08-FFA1-3EF2-A446-C43A78C4A569}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{76FB0B2B-ACD6-33D9-82DB-C2597C9B245C}</UniqueIdentifier>
+      <UniqueIdentifier>{37A9DED3-9D21-3241-AE15-9E00A213AA1D}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

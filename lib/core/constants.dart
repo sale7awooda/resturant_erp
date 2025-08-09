@@ -24,8 +24,8 @@ const Color clrAmber = Colors.amberAccent;
 // const Color clrHEX = Color();
 
 class AppConstants {
-  final String appName = 'Resturant Manager';
-  final Color appMainClr = Colors.green;
+  final String appName = "Resturant Manager";
+  final Color appMainClr = Colors.blue;
   // parseColor('#58c3ed'); // Colors.lightGreen;
   // final String baseURL =
   //     // 'http://192.168.131.1:8080/sinwan/interface/interface.php?action=';
@@ -96,7 +96,7 @@ const gapH32 = SizedBox(height: Sizes.p32);
 const gapH48 = SizedBox(height: Sizes.p48);
 const gapH64 = SizedBox(height: Sizes.p64);
 const gapH80 = SizedBox(height: Sizes.p80);
-const gapH10 = SizedBox(height: Sizes.p100);
+const gapH100 = SizedBox(height: Sizes.p100);
 const gapH150 = SizedBox(height: Sizes.p150);
 const gapH200 = SizedBox(height: Sizes.p200);
 Color parseColor(String hexColor) {

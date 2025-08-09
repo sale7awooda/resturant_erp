@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include="C:\flutter\flutter-apps\shop_manager\build\windows\x64\CMakeFiles\c43dfef3ee918b7797853a488ca428ab\INSTALL_force.rule">
+    <CustomBuild Include="C:\flutter\flutter-apps\resturant_erp\build\windows\x64\CMakeFiles\abb28d9aed194f9fa6be23e124b5709f\INSTALL_force.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
-      <UniqueIdentifier>{BE729451-473E-3406-9F0F-726F34C0AF81}</UniqueIdentifier>
+      <UniqueIdentifier>{A29ADF08-FFA1-3EF2-A446-C43A78C4A569}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

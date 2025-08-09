@@ -1,5 +1,17 @@
 {
-  "Shop Manager": "Shop Manager",
-  "Shop Manager Description": "Manage your shop by adding and managing products, updating shop information, and monitoring orders.",
-  "Splash Screen": "Splash Screen"
+  "Resturant Manager": "Resturant Manager",
+  "Resturant Manager Description": " Manage your restaurant by adding and managing products, updating restaurant information, orders, and monitoring orders.",
+  "My App Name": "My App Name",
+  "Splash Screen": "Splash Screen",
+  "home Screen": "Home Screen",
+  "Dashboard": "Dashboard",
+  "Menu": "Menu",
+  "Orders List": "Orders List",
+  "Bills": "Bills",
+  "Inventory": "Inventory",
+  "History": "History",
+  "Staff": "Staff",
+  "Reports": "Reports",
+  "Logs": "Logs",
+  "Settings": "Settings","Sign Out":"Sign Out","Sign In":"Sign In"
 }
