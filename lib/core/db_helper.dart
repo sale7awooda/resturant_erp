@@ -20,7 +20,7 @@ class DBHelper {
 
     _db = await openDatabase(
       path,
-      version: 2, // bumped because schema change
+      version: 1, // bumped because schema change
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE cart (
