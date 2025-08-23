@@ -24,10 +24,10 @@ class _MainLayoutState extends State<MainLayout> {
     {'icon': Icons.list_alt, 'title': 'Orders List', 'route': '/orders'},
     {'icon': Icons.receipt_long, 'title': 'Bills', 'route': '/bills'},
     {'icon': Icons.inventory_2, 'title': 'Inventory', 'route': '/inventory'},
-    {'icon': Icons.history, 'title': 'History', 'route': '/history'},
+    // {'icon': Icons.history, 'title': 'History', 'route': '/history'},
     {'icon': Icons.people, 'title': 'Staff', 'route': '/staff'},
     {'icon': Icons.bar_chart, 'title': 'Reports', 'route': '/reports'},
-    {'icon': Icons.list, 'title': 'Logs', 'route': '/logs'},
+    {'icon': Icons.history, 'title': 'Logs', 'route': '/logs'},
     {'icon': Icons.settings, 'title': 'Settings', 'route': '/settings'},
   ];
 

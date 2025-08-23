@@ -81,6 +81,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.1"
+  expansion_tile_group:
+    dependency: "direct main"
+    description:
+      name: expansion_tile_group
+      sha256: "894c5088d94dda5d1ddde50463881935ff41b15850fe674605b9003d09716c8e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.0"
   fake_async:
     dependency: transitive
     description:
@@ -151,10 +159,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_spinkit
-      sha256: d2696eed13732831414595b98863260e33e8882fc069ee80ec35d4ac9ddb0472
+      sha256: "77850df57c00dc218bfe96071d576a8babec24cf58b2ed121c83cca4a2fdce7f"
       url: "https://pub.dev"
     source: hosted
-    version: "5.2.1"
+    version: "5.2.2"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -165,6 +173,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  getwidget:
+    dependency: "direct main"
+    description:
+      name: getwidget
+      sha256: "0aea9b0168fec787501be65fc25c3ceb1e7f650ed77ee8f1edbda3296ea4d6a0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.0"
   go_router:
     dependency: "direct main"
     description:
@@ -341,14 +357,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.5"
-  responsive_framework:
-    dependency: "direct main"
-    description:
-      name: responsive_framework
-      sha256: e083346029b008335b008274c4d3fac5b9e0ca8796f201ed20884f579101d584
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.0"
   riverpod:
     dependency: transitive
     description:
@@ -466,22 +474,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.0"
-  sqflite:
-    dependency: "direct main"
-    description:
-      name: sqflite
-      sha256: "2d7299468485dca85efeeadf5d38986909c5eb0cd71fd3db2c2f000e6c9454bb"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.1"
-  sqflite_android:
-    dependency: transitive
-    description:
-      name: sqflite_android
-      sha256: "78f489aab276260cdd26676d2169446c7ecd3484bbd5fead4ca14f3ed4dd9ee3"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.0"
   sqflite_common:
     dependency: transitive
     description:
@@ -498,22 +490,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.4+4"
-  sqflite_darwin:
-    dependency: transitive
-    description:
-      name: sqflite_darwin
-      sha256: "22adfd9a2c7d634041e96d6241e6e1c8138ca6817018afc5d443fef91dcefa9c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.1+1"
-  sqflite_platform_interface:
-    dependency: transitive
-    description:
-      name: sqflite_platform_interface
-      sha256: "8dd4515c7bdcae0a785b0062859336de775e8c65db81ae33dd5445f35be61920"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.0"
   sqlite3:
     dependency: transitive
     description:

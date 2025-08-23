@@ -6,6 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:starter_template/core/constants.dart';
+import 'package:starter_template/core/db_helper.dart';
 import 'package:window_manager/window_manager.dart';
 import 'core/router/app_router.dart';
 
@@ -18,6 +19,9 @@ void main() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
+  // 🔹 Initialize DB here before providers run
+  await DBHelper.init();
+
   WindowOptions options = WindowOptions(
       minimumSize: Size(800, 800),
       size: Size(1200, 800),

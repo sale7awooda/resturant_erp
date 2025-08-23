@@ -70,9 +70,13 @@ class CategorySelector extends ConsumerWidget {
     final categories = ref.watch(categoriesProvider);
     final selected = ref.watch(selectedCategoryProvider);
 
-    return SizedBox(
-      // margin: EdgeInsets.symmetric(vertical: 10.h),
-      height: 90.h,
+    return Container(
+      // color: clrMainAppClrLight,
+      margin: EdgeInsets.symmetric(horizontal: 5.h),
+      // decoration: BoxDecoration(
+      //     borderRadius: BorderRadius.circular(10.r),
+      //     border: Border.all(color: clrMainAppClr, width: 2.w)),
+      height: 70.h,
       child: ListView(
         scrollDirection: Axis.horizontal,
         shrinkWrap: true,
@@ -80,26 +84,26 @@ class CategorySelector extends ConsumerWidget {
         children: categories.map((c) {
           final isSelected = selected == c;
           return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.h),
+            // margin: EdgeInsets.all(10),
+            padding: EdgeInsets.all(3.h),
             child: ChoiceChip(
               showCheckmark: false,
               selectedColor: clrMainAppClr,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.r),
+                  borderRadius: BorderRadius.circular(15.r),
                   side: BorderSide(
                       color: isSelected ? clrMainAppClr : clrLightGrey,
                       width: 2.w)),
               label: Container(
-                  alignment: Alignment.center,
-                  // padding: EdgeInsets.all(5.w),
-                  height: 70.h,
-                  width: 70.w,
-                  child: TxtWidget(
-                      txt: c,
-                      color: isSelected ? clrWhite : clrBlack,
-                      fontWeight: FontWeight.w600,
-                      textAlign: TextAlign.center,
-                      fontsize: 13.sp)),
+                alignment: Alignment.center,
+                height: 50.h,
+                child: TxtWidget(
+                    txt: c.toUpperCase().split('ALL').join('ALL '),
+                    color: isSelected ? clrWhite : clrBlack,
+                    fontWeight: FontWeight.w600,
+                    textAlign: TextAlign.center,
+                    fontsize: 12.sp),
+              ),
               selected: isSelected,
               onSelected: (_) {
                 ref.read(selectedCategoryProvider.notifier).state = c;

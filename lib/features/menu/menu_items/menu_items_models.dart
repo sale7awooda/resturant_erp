@@ -1,6 +1,7 @@
 class MenuItemModel {
   final String id;
   final String name;
+  final String img;
   final String categ;
   final double price;
   final List<String> options; // single-choice options (e.g., size)
@@ -8,6 +9,7 @@ class MenuItemModel {
   MenuItemModel({
     required this.id,
     required this.name,
+    required this.img,
     required this.categ,
     required this.price,
     required this.options,

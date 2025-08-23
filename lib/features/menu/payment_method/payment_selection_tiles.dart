@@ -67,53 +67,60 @@ import 'package:starter_template/features/menu/payment_method/payment_method_pro
 
 class PaymentMethodSelector extends ConsumerWidget {
   const PaymentMethodSelector({super.key});
-  final methods = const ['Cash Payment', 'Mobile Banking'];
+  // final methods = const ['Cash Payment', 'Mobile Banking'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(paymentMethodProvider);
 
-    return ListView(
-      shrinkWrap: true,
-      scrollDirection: Axis.horizontal,
-      // spacing: 8,
-      children: methods.map((m) {
-        final isSelected = selected == m;
-        return Padding(
-          padding:  EdgeInsets.symmetric(horizontal: 4.w),
-          child: ChoiceChip(
-              showCheckmark: false,
-              selectedColor: clrMainAppClr,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                  side: BorderSide(
-                      color: isSelected ? clrMainAppClr : clrLightGrey,
-                      width: 2.w)),
-              label: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Icon(
-                    m == 'Cash Payment'
-                        ? Icons.attach_money_rounded
-                        : Icons.mobile_screen_share_rounded,
-                    color: isSelected ? clrWhite : clrBlack,
-                    size: 30.sp,
-                  ),
-                  TxtWidget(
-                      txt: m,
-                      color: isSelected ? clrWhite : clrBlack,
-                      textAlign: TextAlign.center,
-                      fontsize: 14.sp),
-                ],
-              ),
-              selected: isSelected,
-              onSelected: (_) {
-                debugPrint('Selected payment method: $m');
-                ref.read(paymentMethodProvider.notifier).state = m;
-              }),
-        );
-      }).toList(),
+    return Center(
+      child: ListView(
+        shrinkWrap: true,
+        scrollDirection: Axis.horizontal,
+        // spacing: 8,
+        children: PaymentMethod.values.map((m) {
+          final isSelected = selected == m.name;
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4.w),
+            child: ChoiceChip(
+                showCheckmark: false,
+                selectedColor: clrMainAppClr,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                    side: BorderSide(
+                        color: isSelected ? clrMainAppClr : clrLightGrey,
+                        width: 2.w)),
+                labelPadding: EdgeInsets.all(0),
+                label: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Icon(
+                        m == PaymentMethod.cashPayment //'Cash Payment'
+                            ? Icons.attach_money_rounded
+                            : Icons.mobile_screen_share_rounded,
+                        color: isSelected ? clrWhite : clrBlack,
+                        size: 30.sp,
+                      ),
+                      TxtWidget(
+                          txt: m == PaymentMethod.cashPayment
+                              ? m.name.toUpperCase().split('CASH').join('CASH ')
+                              : m.name
+                                  .toUpperCase()
+                                  .split('MOBILE')
+                                  .join('MOBILE '),
+                          color: isSelected ? clrWhite : clrBlack,
+                          textAlign: TextAlign.center,
+                          fontsize: 13.sp)
+                    ]),
+                selected: isSelected,
+                onSelected: (_) {
+                  debugPrint('Selected payment method: $m');
+                  ref.read(paymentMethodProvider.notifier).state = m.name;
+                }),
+          );
+        }).toList(),
+      ),
     );
   }
 }

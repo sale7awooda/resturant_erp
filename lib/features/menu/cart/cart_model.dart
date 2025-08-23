@@ -1,9 +1,13 @@
+// cart_model.dart
 class CartItemModel {
-  final int? dbId; // primary key in sqlite (nullable while in-memory)
-  final String itemId; // menu item id
+  final int? dbId;
+  final String itemId;
   final String name;
   final double price;
   final String? selectedOption;
+  final String? selectedTable;
+  final String orderType;
+  final String? imageUrl; // NEW
   final int quantity;
 
   CartItemModel({
@@ -12,19 +16,22 @@ class CartItemModel {
     required this.name,
     required this.price,
     this.selectedOption,
+    this.selectedTable,
+    required this.orderType,
+    this.imageUrl,
     this.quantity = 1,
   });
 
-  CartItemModel copyWith({
-    int? dbId,
-    int? quantity,
-  }) {
+  CartItemModel copyWith({int? dbId, int? quantity, String? selectedTable}) {
     return CartItemModel(
       dbId: dbId ?? this.dbId,
       itemId: itemId,
       name: name,
       price: price,
       selectedOption: selectedOption,
+      selectedTable: selectedTable,
+      orderType: orderType,
+      imageUrl: imageUrl,
       quantity: quantity ?? this.quantity,
     );
   }
@@ -36,6 +43,9 @@ class CartItemModel {
       'name': name,
       'price': price,
       'selectedOption': selectedOption,
+      'selectedTable': selectedTable,
+      'orderType': orderType,
+      'imageUrl': imageUrl,
       'quantity': quantity,
     };
   }
@@ -47,6 +57,9 @@ class CartItemModel {
       name: map['name'] as String,
       price: (map['price'] as num).toDouble(),
       selectedOption: map['selectedOption'] as String?,
+      selectedTable: map['selectedTable'] as String?,
+      orderType: map['orderType'] as String,
+      imageUrl: map['imageUrl'] as String?,
       quantity: map['quantity'] as int,
     );
   }

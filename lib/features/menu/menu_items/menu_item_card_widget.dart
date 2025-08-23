@@ -7,117 +7,132 @@ import 'package:starter_template/features/menu/cart/cart_model.dart';
 import 'package:starter_template/features/menu/cart/cart_provider.dart';
 import 'package:starter_template/features/menu/menu_items/menu_items_models.dart';
 import 'package:starter_template/features/menu/menu_items/menu_items_providers.dart';
+import 'package:starter_template/features/menu/tabs_section/order_type_provider.dart';
 
-class ItemCard extends ConsumerStatefulWidget {
+class ItemCard extends ConsumerWidget {
   final MenuItemModel item;
   const ItemCard({super.key, required this.item});
 
   @override
-  ConsumerState<ItemCard> createState() => _ItemCardState();
-}
-
-class _ItemCardState extends ConsumerState<ItemCard> {
-  String? selectedOption;
-  int quantity = 1;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final selectedOptions = ref.watch(selectedOptionsProvider);
+    final orderType = ref.read(orderTypeProvider).name;
+    final quantity = ref.watch(itemQuantityProvider(item.id));
 
-    // initialize from provider if exists
-    selectedOption = selectedOptions[widget.item.id] ?? selectedOption;
+    final selectedOption = selectedOptions[item.id];
 
     return Card(
-      // margin:  EdgeInsets.symmetric(vertical: 5.w, horizontal: 5.w),
       child: Padding(
-        padding: EdgeInsets.all(10.w),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                TxtWidget(
-                    txt: widget.item.name,
-                    fontsize: 18.sp,
-                    fontWeight: FontWeight.bold),
-                TxtWidget(txt: 'SDG ${widget.item.price.toString()}')
-              ]),
-              Container(
-                height: 70.h,
-                width: 70.h,
-                decoration: BoxDecoration(
-                    color: clrMainAppClrLight,
-                    borderRadius: BorderRadius.circular(10.r),
-                    border: Border.all(color: clrLightGrey)),
-              )
-            ],
-          ),
-          gapH8,
-          Center(
-            child: Wrap(
-              spacing: 5.h,
-              children: widget.item.options.map((opt) {
-                final isSel = selectedOption == opt;
-                return ChoiceChip(
-                  showCheckmark: false,
-                  labelPadding: EdgeInsets.all(0),
-                  label: TxtWidget(txt: opt),
-                  selected: isSel,
-                  onSelected: (_) {
-                    // setState(() {
-                    //   selectedOption = opt;
-                    // });
-                    // persist into selectedOptionsProvider (ui state)
-                    final map = Map<String, String?>.from(
-                        ref.read(selectedOptionsProvider));
-                    map[widget.item.id] = opt;
-                    ref.read(selectedOptionsProvider.notifier).state = map;
-                    debugPrint('Selected option for ${widget.item.name}: $opt');
-                  },
-                );
-              }).toList(),
+        padding: EdgeInsets.all(5.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 115.w,
+                      child: TxtWidget(
+                        txt: item.name,
+                        fontsize: 18.sp,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 70.w,
+                      child: TxtWidget(
+                        txt: '${item.price} SDG',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  height: 90.h,
+                  width: 90.h,
+                  decoration: BoxDecoration(
+                    color: clrWhite,
+                    borderRadius: BorderRadius.circular(15.r),
+                    border: Border.all(color: clrLightGrey),
+                  ),
+                  child: Image.asset(item.img),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                onPressed: () => setState(
-                    () => quantity = (quantity > 1) ? quantity - 1 : 1),
-                icon: const Icon(Icons.remove_circle_outline),
-              ),
-              Text('$quantity'),
-              IconButton(
-                onPressed: () => setState(() => quantity++),
-                icon: const Icon(Icons.add_circle_outline),
-              )
-            ],
-          ),
-          Center(
-            child: ElevatedButton.icon(
-              onPressed: selectedOption == null
-                  ? null
-                  : () async {
-                      final cartItem = CartItemModel(
-                        itemId: widget.item.id,
-                        name: widget.item.name,
-                        price: widget.item.price,
-                        selectedOption: selectedOption,
-                        quantity: quantity,
+            gapH4,
+            Center(
+              child: Wrap(
+                spacing: 5.h,
+                children: item.options.map((opt) {
+                  final isSel = selectedOption == opt;
+                  return ChoiceChip(
+                    showCheckmark: false,
+                    labelPadding: EdgeInsets.all(0),
+                    label: TxtWidget(txt: opt),
+                    selected: isSel,
+                    onSelected: (_) {
+                      final map = Map<String, String?>.from(
+                        ref.read(selectedOptionsProvider),
                       );
-                      await ref
-                          .read(cartAsyncNotifierProvider.notifier)
-                          .addToCart(cartItem);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text('${widget.item.name} added to cart')),
-                      );
+                      map[item.id] = opt;
+                      ref.read(selectedOptionsProvider.notifier).state = map;
+                      debugPrint('Selected option for ${item.name}: $opt');
                     },
-              icon: const Icon(Icons.add_shopping_cart),
-              label: const Text('Add to Order'),
+                  );
+                }).toList(),
+              ),
             ),
-          )
-        ]),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  onPressed: () {
+                    if (quantity > 1) {
+                      ref.read(itemQuantityProvider(item.id).notifier).state--;
+                    }
+                  },
+                  icon: const Icon(Icons.remove_circle_outline),
+                ),
+                Text('$quantity'),
+                IconButton(
+                  onPressed: () {
+                    ref.read(itemQuantityProvider(item.id).notifier).state++;
+                  },
+                  icon: const Icon(Icons.add_circle_outline),
+                ),
+              ],
+            ),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: selectedOption == null
+                    ? null
+                    : () async {
+                        ref
+                            .read(cartAsyncNotifierProvider.notifier)
+                            .addToCart(CartItemModel(
+                              itemId: item.id,
+                              name: item.name,
+                              price: item.price,
+                              imageUrl: item.img,
+                              selectedOption: selectedOption,
+                              selectedTable: null,
+                              orderType: orderType,
+                              quantity: quantity,
+                            ));
+                      },
+                icon: const Icon(Icons.add_shopping_cart),
+                label: const Text('Add to Order'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

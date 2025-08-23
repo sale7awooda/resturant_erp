@@ -62,6 +62,12 @@
       "languageVersion": "2.14"
     },
     {
+      "name": "expansion_tile_group",
+      "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/expansion_tile_group-2.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.18"
+    },
+    {
       "name": "fake_async",
       "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/fake_async-1.3.1",
       "packageUri": "lib/",
@@ -117,7 +123,7 @@
     },
     {
       "name": "flutter_spinkit",
-      "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_spinkit-5.2.1",
+      "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_spinkit-5.2.2",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
@@ -132,6 +138,12 @@
       "rootUri": "file:///C:/flutter/flutter_windows_3.27.3-stable/flutter/packages/flutter_web_plugins",
       "packageUri": "lib/",
       "languageVersion": "3.2"
+    },
+    {
+      "name": "getwidget",
+      "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/getwidget-6.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "go_router",
@@ -266,12 +278,6 @@
       "languageVersion": "2.12"
     },
     {
-      "name": "responsive_framework",
-      "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/responsive_framework-0.2.0",
-      "packageUri": "lib/",
-      "languageVersion": "2.17"
-    },
-    {
       "name": "riverpod",
       "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/riverpod-2.6.1",
       "packageUri": "lib/",
@@ -362,18 +368,6 @@
       "languageVersion": "2.18"
     },
     {
-      "name": "sqflite",
-      "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite-2.4.1",
-      "packageUri": "lib/",
-      "languageVersion": "3.5"
-    },
-    {
-      "name": "sqflite_android",
-      "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_android-2.4.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.5"
-    },
-    {
       "name": "sqflite_common",
       "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_common-2.5.4+6",
       "packageUri": "lib/",
@@ -382,18 +376,6 @@
     {
       "name": "sqflite_common_ffi",
       "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_common_ffi-2.3.4+4",
-      "packageUri": "lib/",
-      "languageVersion": "3.5"
-    },
-    {
-      "name": "sqflite_darwin",
-      "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_darwin-2.4.1+1",
-      "packageUri": "lib/",
-      "languageVersion": "3.5"
-    },
-    {
-      "name": "sqflite_platform_interface",
-      "rootUri": "file:///C:/Users/user/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_platform_interface-2.4.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
@@ -488,7 +470,7 @@
       "languageVersion": "3.6"
     }
   ],
-  "generated": "2025-08-09T15:17:45.467283Z",
+  "generated": "2025-08-21T10:54:48.649554Z",
   "generator": "pub",
   "generatorVersion": "3.6.1",
   "flutterRoot": "file:///C:/flutter/flutter_windows_3.27.3-stable/flutter",

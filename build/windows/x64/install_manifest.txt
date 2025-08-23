@@ -4,6 +4,7 @@ C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/screen_retr
 C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/window_manager_plugin.dll
 C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/AssetManifest.bin
 C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/AssetManifest.json
+C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/assets/images/img.png
 C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/assets/translation/ar.json
 C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/assets/translation/en.json
 C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/FontManifest.json
@@ -11,4 +12,15 @@ C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutte
 C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/kernel_blob.bin
 C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/NOTICES.Z
 C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf
+C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/packages/getwidget/icons/dribble.png
+C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/packages/getwidget/icons/facebook.png
+C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/packages/getwidget/icons/google.png
+C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/packages/getwidget/icons/line.png
+C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/packages/getwidget/icons/linkedin.png
+C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/packages/getwidget/icons/pinterest.png
+C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/packages/getwidget/icons/slack.png
+C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/packages/getwidget/icons/twitter.png
+C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/packages/getwidget/icons/wechat.png
+C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/packages/getwidget/icons/whatsapp.png
+C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/packages/getwidget/icons/youtube.png
 C:/flutter/flutter-apps/resturant_erp/build/windows/x64/runner/Debug/data/flutter_assets/shaders/ink_sparkle.frag
