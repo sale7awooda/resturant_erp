@@ -13,11 +13,11 @@ class ItemsList extends ConsumerWidget {
       height: 575.h, // width: double.infinity, // Adjust as needed
       child: GridView.builder(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          mainAxisSpacing: 1.w,
-          crossAxisSpacing: 1.w,
-          mainAxisExtent: 230
-        ),
+            crossAxisCount: MediaQuery.sizeOf(context).width >= 1200 ? 4 : 3,
+            mainAxisSpacing: 1.w,
+            crossAxisSpacing: 1.w,
+            // mainAxisExtent: 260,
+            childAspectRatio: .90),
         itemCount: items.length,
         itemBuilder: (context, i) => ItemCard(item: items[i]),
       ),

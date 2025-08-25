@@ -1,10 +1,9 @@
 // lib/features/menu/cart/cart_provider.dart
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_template/core/db_helper.dart';
+import 'package:starter_template/features/logs/log_model.dart';
 import 'package:starter_template/features/menu/cart/cart_model.dart';
-import 'package:starter_template/features/menu/tabs_section/order_type_provider.dart';
-import 'package:starter_template/features/menu/tabs_section/table_provider.dart';
+import 'package:starter_template/features/orders_list/place_order/orders_provider.dart';
 
 final cartAsyncNotifierProvider =
     AsyncNotifierProvider<CartNotifier, List<CartItemModel>>(
@@ -14,54 +13,31 @@ final cartAsyncNotifierProvider =
 class CartNotifier extends AsyncNotifier<List<CartItemModel>> {
   @override
   Future<List<CartItemModel>> build() async {
-    final orderType = ref.watch(orderTypeProvider).name;
-    final table = ref.watch(selectedTableProvider);
-
-    return DBHelper.getCartItems(
-      orderType: orderType,
-      selectedTable: orderType == 'dinein' ? table : null,
-    );
+    return DBHelper.getCartItems();
   }
 
   Future<void> reload() async {
     state = const AsyncValue.loading();
-    final orderType = ref.read(orderTypeProvider).name;
-    final table = ref.read(selectedTableProvider);
-
-    final list = await DBHelper.getCartItems(
-      orderType: orderType,
-      selectedTable: orderType == 'dinein' ? table : null,
-    );
-    state = AsyncValue.data(list);
+    state = AsyncValue.data(await DBHelper.getCartItems());
   }
 
-  Future<void> addToCart(CartItemModel raw) async {
-    final orderType = ref.read(orderTypeProvider).name;
-    String? table;
-    if (orderType == 'dinein') {
-      table = ref.read(selectedTableProvider);
-      if (table == null || table.isEmpty) {
-        throw Exception('Please select a table before adding items.');
-      }
-    }
-
-    final item = raw.copyWith(selectedTable: table);
-
+  Future<void> addToCart(CartItemModel item) async {
     final current = state.value ?? [];
     final idx = current.indexWhere((c) =>
         c.itemId == item.itemId &&
-        (c.selectedOption ?? '') == (item.selectedOption ?? '') &&
-        (c.selectedTable ?? '') == (item.selectedTable ?? '') &&
-        c.orderType == item.orderType);
+        (c.selectedOption ?? '') == (item.selectedOption ?? ''));
 
     if (idx != -1) {
       final ex = current[idx];
       final updated = ex.copyWith(quantity: ex.quantity + item.quantity);
       await DBHelper.updateCartItem(updated);
+      await _log('cart_update', 'cart', updated.dbId?.toString(),
+          'Updated ${updated.name} quantity to ${updated.quantity}');
     } else {
-      await DBHelper.insertCartItem(item);
+      final id = await DBHelper.insertCartItem(item);
+      await _log('cart_add', 'cart', id.toString(),
+          'Added ${item.name} x${item.quantity}');
     }
-
     await reload();
   }
 
@@ -70,28 +46,38 @@ class CartNotifier extends AsyncNotifier<List<CartItemModel>> {
     final i = list.indexWhere((e) => e.dbId == dbId);
     if (i == -1) return;
 
-    await DBHelper.updateCartItem(list[i].copyWith(quantity: quantity));
+    final updated = list[i].copyWith(quantity: quantity);
+    await DBHelper.updateCartItem(updated);
+    await _log('cart_update', 'cart', dbId.toString(),
+        'Set ${updated.name} quantity to $quantity');
     await reload();
   }
 
   Future<void> removeItem(int dbId) async {
+    final list = state.value ?? [];
+    final item = list.firstWhere((e) => e.dbId == dbId);
     await DBHelper.deleteCartItem(dbId);
+    await _log('cart_remove', 'cart', dbId.toString(),
+        'Removed ${item.name} from cart');
     await reload();
   }
 
   Future<void> clearCart() async {
-    final orderType = ref.read(orderTypeProvider).name;
-    final table = ref.read(selectedTableProvider);
-
-    if (orderType == 'dinein') {
-      if (table == null || table.isEmpty) {
-        throw Exception("Select a table before clearing cart.");
-      }
-      await DBHelper.clearCart(orderType: orderType, selectedTable: table);
-    } else {
-      await DBHelper.clearCart(orderType: orderType);
-    }
+    await DBHelper.clearCart();
+    await _log('cart_cleared', 'cart', null, 'Cart cleared');
     await reload();
+  }
+
+  Future<void> _log(
+      String action, String entity, String? entityId, String details) async {
+    await DBHelper.insertLog(LogModel(
+      action: action,
+      entity: entity,
+      entityId: entityId,
+      details: details,
+      userId: ref.read(currentUserIdProvider),
+      timestamp: DateTime.now(),
+    ));
   }
 }
 

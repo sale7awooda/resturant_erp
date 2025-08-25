@@ -7,7 +7,7 @@ import 'package:starter_template/features/menu/cart/cart_model.dart';
 import 'package:starter_template/features/menu/cart/cart_provider.dart';
 import 'package:starter_template/features/menu/menu_items/menu_items_models.dart';
 import 'package:starter_template/features/menu/menu_items/menu_items_providers.dart';
-import 'package:starter_template/features/menu/tabs_section/order_type_provider.dart';
+import 'package:starter_template/features/menu/selctors/order_type_provider.dart';
 
 class ItemCard extends ConsumerWidget {
   final MenuItemModel item;
@@ -16,47 +16,55 @@ class ItemCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedOptions = ref.watch(selectedOptionsProvider);
+    // final selectedTable = ref.read(selectedTableProvider);
     final orderType = ref.read(orderTypeProvider).name;
     final quantity = ref.watch(itemQuantityProvider(item.id));
 
     final selectedOption = selectedOptions[item.id];
 
     return Card(
+      color: clrWhite,
       child: Padding(
-        padding: EdgeInsets.all(5.w),
+        padding: EdgeInsets.all(3.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      width: 115.w,
+                      width: MediaQuery.sizeOf(context).width >= 1200
+                          ? 100.w
+                          : 125.w,
                       child: TxtWidget(
-                        txt: item.name,
-                        fontsize: 18.sp,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        fontWeight: FontWeight.bold,
-                      ),
+                          txt: item.name,
+                          fontsize: MediaQuery.sizeOf(context).width >= 1200
+                              ? 12.sp
+                              : 15.sp,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          fontWeight: FontWeight.w700),
                     ),
+                    // gapH4,
                     SizedBox(
                       width: 70.w,
                       child: TxtWidget(
                         txt: '${item.price} SDG',
+                        fontWeight: FontWeight.w700,
+                        color: clrMainAppClr,
                         overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
+                        maxLines: 1,
                       ),
                     ),
                   ],
                 ),
                 Container(
-                  height: 90.h,
-                  width: 90.h,
+                  height: 85.h,
+                  width: 85.h,
                   decoration: BoxDecoration(
                     color: clrWhite,
                     borderRadius: BorderRadius.circular(15.r),
@@ -66,7 +74,6 @@ class ItemCard extends ConsumerWidget {
                 ),
               ],
             ),
-            gapH4,
             Center(
               child: Wrap(
                 spacing: 5.h,
@@ -75,7 +82,12 @@ class ItemCard extends ConsumerWidget {
                   return ChoiceChip(
                     showCheckmark: false,
                     labelPadding: EdgeInsets.all(0),
-                    label: TxtWidget(txt: opt),
+                    label: TxtWidget(
+                      txt: opt,
+                      fontsize: MediaQuery.sizeOf(context).width >= 1200
+                          ? 10.sp
+                          : 13.sp,
+                    ),
                     selected: isSel,
                     onSelected: (_) {
                       final map = Map<String, String?>.from(
@@ -122,7 +134,9 @@ class ItemCard extends ConsumerWidget {
                               price: item.price,
                               imageUrl: item.img,
                               selectedOption: selectedOption,
-                              selectedTable: null,
+                              // selectedTable: orderType == OrderType.dinein.name
+                              //     ? ref.read(selectedTableProvider)
+                              //     : null,
                               orderType: orderType,
                               quantity: quantity,
                             ));

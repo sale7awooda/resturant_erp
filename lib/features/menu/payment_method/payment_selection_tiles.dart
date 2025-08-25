@@ -73,16 +73,17 @@ class PaymentMethodSelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(paymentMethodProvider);
 
-    return Center(
-      child: ListView(
-        shrinkWrap: true,
-        scrollDirection: Axis.horizontal,
-        // spacing: 8,
-        children: PaymentMethod.values.map((m) {
-          final isSelected = selected == m.name;
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.w),
-            child: ChoiceChip(
+    return SizedBox(
+      height: 80.h,
+      width: 280.w,
+      child: Center(
+        child: Wrap(
+          // shrinkWrap: true,
+          // scrollDirection: Axis.horizontal,
+          spacing: 5.h,
+          children: PaymentMethod.values.map((m) {
+            final isSelected = selected == m.name;
+            return ChoiceChip(
                 showCheckmark: false,
                 selectedColor: clrMainAppClr,
                 shape: RoundedRectangleBorder(
@@ -92,16 +93,15 @@ class PaymentMethodSelector extends ConsumerWidget {
                         width: 2.w)),
                 labelPadding: EdgeInsets.all(0),
                 label: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.max,
+                    // mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        m == PaymentMethod.cashPayment //'Cash Payment'
-                            ? Icons.attach_money_rounded
-                            : Icons.mobile_screen_share_rounded,
-                        color: isSelected ? clrWhite : clrBlack,
-                        size: 30.sp,
-                      ),
+                          m == PaymentMethod.cashPayment //'Cash Payment'
+                              ? Icons.attach_money_rounded
+                              : Icons.mobile_screen_share_rounded,
+                          color: isSelected ? clrWhite : clrBlack,
+                          size: 30.sp),
                       TxtWidget(
                           txt: m == PaymentMethod.cashPayment
                               ? m.name.toUpperCase().split('CASH').join('CASH ')
@@ -111,15 +111,15 @@ class PaymentMethodSelector extends ConsumerWidget {
                                   .join('MOBILE '),
                           color: isSelected ? clrWhite : clrBlack,
                           textAlign: TextAlign.center,
-                          fontsize: 13.sp)
+                          fontsize: MediaQuery.sizeOf(context).width >=1200? 10.sp:13.sp)
                     ]),
                 selected: isSelected,
                 onSelected: (_) {
                   debugPrint('Selected payment method: $m');
                   ref.read(paymentMethodProvider.notifier).state = m.name;
-                }),
-          );
-        }).toList(),
+                });
+          }).toList(),
+        ),
       ),
     );
   }

@@ -25,6 +25,7 @@ dependencies:
   # responsive_framework: ^0.2.0 
   # sqflite: ^2.0.0
   # supabase_flutter: ^2.9.1
+  pluto_grid: ^8.0.0
   sqflite_common_ffi: ^2.3.4+4
   window_manager: ^0.5.1
 
