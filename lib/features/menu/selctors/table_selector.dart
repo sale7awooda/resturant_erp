@@ -1,4 +1,3 @@
-import 'package:expansion_tile_group/expansion_tile_group.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,107 +13,76 @@ class TableSelector extends ConsumerWidget {
     final tables = ref.watch(tablesProvider);
     final selected = ref.watch(selectedTableProvider);
 
-    return SizedBox(
-        // color: clrMainAppClrLight,
-        // margin: EdgeInsets.symmetric(vertical: 10.h),
-        // height: 200.h,
-        // width: 290.w,
-        // decoration: BoxDecoration(
-        //     borderRadius: BorderRadius.circular(10.r),
-        //     border: Border.all(color: clrMainAppClr, width: 2.w)),
-        child:Center(
-            child: Wrap(
-                spacing: 1.w,
-                direction: Axis.horizontal,
-                // scrollDirection: Axis.horizontal,
-                // shrinkWrap: true,
-                // physics: AlwaysScrollableScrollPhysics(),
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 15.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TxtWidget(
+                  txt: "Select Table",
+                  fontsize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: clrMainAppClr,
+                ),
+                Icon(Icons.table_bar, color: clrMainAppClr, size: 30.sp),
+              ],
+            ),
+            SizedBox(height: 10.h),
+            Center(
+              child: Wrap(
+                spacing: 5.w,
+                runSpacing: 5.h,
                 children: tables.map((t) {
                   final isSelected = selected == t;
-                  return Padding(
-                      // margin: EdgeInsets.all(10),
-                      padding: EdgeInsets.all(2.w),
-                      child: ChoiceChip(
-                          showCheckmark: false,
-                          selectedColor: clrMainAppClr,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15.r),
-                              side: BorderSide(
-                                  color:
-                                      isSelected ? clrMainAppClr : clrLightGrey,
-                                  width: 2.w)),
-                          labelPadding: EdgeInsets.all(0),
-                          label: Container(
-                            alignment: Alignment.center,
-                            height: 40.h,
-                            width: 40.w,
-                            child: TxtWidget(
-                                txt: t.toUpperCase(),
-                                color: isSelected ? clrWhite : clrBlack,
-                                fontWeight: FontWeight.w500,
-                                textAlign: TextAlign.center,
-                                fontsize: 12.sp),
-                          ),
-                          selected: isSelected,
-                          onSelected: (_) {
-                            ref.read(selectedTableProvider.notifier).state = t;
-                            debugPrint(
-                                '=================================\n Selected table: $t}');
-                          }));
-                }).toList()),
-          ) 
-        // ExpansionTileItem.card(
-        //     initiallyExpanded: true,
-        //     childrenPadding: EdgeInsets.only(bottom: 5.h),
-        //     title: TxtWidget(
-        //         txt: 'Select Table:',
-        //         color: clrMainAppClr,
-        //         textAlign: TextAlign.center,
-        //         fontsize: 16.sp,
-        //         fontWeight: FontWeight.w600),
-        //     children: [
-        //   Center(
-        //     child: Wrap(
-        //         spacing: 1.w,
-        //         direction: Axis.horizontal,
-        //         // scrollDirection: Axis.horizontal,
-        //         // shrinkWrap: true,
-        //         // physics: AlwaysScrollableScrollPhysics(),
-        //         children: tables.map((t) {
-        //           final isSelected = selected == t;
-        //           return Padding(
-        //               // margin: EdgeInsets.all(10),
-        //               padding: EdgeInsets.all(2.w),
-        //               child: ChoiceChip(
-        //                   showCheckmark: false,
-        //                   selectedColor: clrMainAppClr,
-        //                   shape: RoundedRectangleBorder(
-        //                       borderRadius: BorderRadius.circular(15.r),
-        //                       side: BorderSide(
-        //                           color:
-        //                               isSelected ? clrMainAppClr : clrLightGrey,
-        //                           width: 2.w)),
-        //                   labelPadding: EdgeInsets.all(0),
-        //                   label: Container(
-        //                     alignment: Alignment.center,
-        //                     height: 40.h,
-        //                     width: 40.w,
-        //                     child: TxtWidget(
-        //                         txt: t.toUpperCase(),
-        //                         color: isSelected ? clrWhite : clrBlack,
-        //                         fontWeight: FontWeight.w500,
-        //                         textAlign: TextAlign.center,
-        //                         fontsize: 12.sp),
-        //                   ),
-        //                   selected: isSelected,
-        //                   onSelected: (_) {
-        //                     ref.read(selectedTableProvider.notifier).state = t;
-        //                     debugPrint(
-        //                         '=================================\n Selected table: $t}');
-        //                   }));
-        //         }).toList()),
-        //   ),
-        // ])
-        );
+
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(16.r),
+                    onTap: () {
+                      ref.read(selectedTableProvider.notifier).state = t;
+                      debugPrint("✅ Selected table: $t");
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      height: 50.h,
+                      width: 65.w,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isSelected ? clrMainAppClr : Colors.white,
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(
+                          color: isSelected ? clrMainAppClr : clrLightGrey,
+                          width: 1.5.w,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: clrMainAppClr.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                )
+                              ]
+                            : [],
+                      ),
+                      child: TxtWidget(
+                        txt: t.toUpperCase(),
+                        textAlign: TextAlign.center,
+                        color: isSelected ? clrWhite : clrBlack,
+                        fontWeight: FontWeight.w600,
+                        fontsize: 13.sp,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

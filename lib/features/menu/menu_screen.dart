@@ -32,14 +32,15 @@ class MenuScreen extends ConsumerWidget {
     final selectedArea = ref.watch(selectedDeliveryAddressProvider);
 
     void placeOrder() async {
-      await ref.read(ordersAsyncProvider.notifier).placeOrder(
-          orderType: orderType.name,
-          orderStatus: "placed",
-          paymentStatus: orderType == OrderType.takeaway ? "paid" : "pending",
-          paymentType:orderType == OrderType.takeaway ? selectedPayment : 'pending', 
-          tableName: orderType == OrderType.dinein ? selectedTable : null,
-          deliveryAddress:
-              orderType == OrderType.delivery ? selectedArea : null);
+      await ref.read(ordersAsyncProvider.notifier).placeOrUpdateOrder(
+            orderType: orderType.name,
+            paymentStatus: orderType == OrderType.takeaway ? "paid" : "pending",
+            paymentType:
+                orderType == OrderType.takeaway ? selectedPayment : "pending",
+            tableName: orderType == OrderType.dinein ? selectedTable : null,
+            deliveryAddress:
+                orderType == OrderType.delivery ? selectedArea : null,
+          );
       ref.read(cartAsyncNotifierProvider.notifier).clearCart();
 
       if (context.mounted) {
@@ -54,7 +55,10 @@ class MenuScreen extends ConsumerWidget {
 
     Widget cartItemCard(it) {
       return Card(
-        color: clrWhite,
+        elevation: 2,
+        margin: EdgeInsets.symmetric(vertical: 4.h, horizontal: 2.w),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
         child: ListTile(
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -62,7 +66,7 @@ class MenuScreen extends ConsumerWidget {
               TxtWidget(
                   txt: it.name, fontsize: 16.sp, fontWeight: FontWeight.w600),
               TxtWidget(
-                  txt: it.price.toString(),
+                  txt: '${it.price} SDG',
                   fontsize: 16.sp,
                   fontWeight: FontWeight.w500,
                   color: clrGrey),
@@ -105,252 +109,242 @@ class MenuScreen extends ConsumerWidget {
     Widget conditionalSelector() {
       if (orderType == OrderType.takeaway) {
         return Card(
-          child: Column(
-            children: const [
-              SizedBox(height: 8),
-              TxtWidget(
-                  txt: 'Payment Method',
-                  fontsize: 15,
-                  fontWeight: FontWeight.w600),
-              Center(child: PaymentMethodSelector()),
-              SizedBox(height: 8),
-            ],
+          elevation: 2,
+          margin: EdgeInsets.symmetric(vertical: 6.h),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 10.h),
+            child: Center(child: PaymentMethodSelector()),
           ),
         );
       } else if (orderType == OrderType.dinein) {
-        return Card(
-          child: Column(
-            children: const [
-              SizedBox(height: 8),
-              TxtWidget(
-                  txt: 'Select Table',
-                  fontsize: 15,
-                  fontWeight: FontWeight.w600),
-              gapH4,
-              TableSelector(),
-              SizedBox(height: 8),
-            ],
-          ),
-        );
+        return TableSelector();
       } else if (orderType == OrderType.delivery) {
-        return Card(
-          child: Column(
-            children: const [
-              SizedBox(height: 8),
-              TxtWidget(
-                  txt: 'Delivery Address',
-                  fontsize: 15,
-                  fontWeight: FontWeight.w600),
-              DeliveryAddressSelector(),
-              SizedBox(height: 8),
-            ],
-          ),
-        );
+        return DeliveryAddressSelector();
       }
       return const SizedBox.shrink();
     }
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // --- Left Menu Column ---
-        Flexible(
-          flex: MediaQuery.sizeOf(context).width >= 1200 ? 8 : 7,
-          child: Container(
-            color: clrLightGrey.withValues(alpha: 0.5),
-            padding: EdgeInsets.all(2.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TxtWidget(
-                    txt: 'Categories',
-                    fontsize: 18.sp,
-                    fontWeight: FontWeight.w600),
-                gapH8,
-                const CategorySelector(),
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 5.h, horizontal: 5.w),
-                  height: 30.h,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TxtWidget(
-                          txt: 'Select Menu',
-                          fontsize: 18.sp,
-                          fontWeight: FontWeight.w600),
-                      TxtWidget(
-                          txt: 'showing ${menuItems.length} items',
-                          fontsize: 15.sp,
-                          color: clrGrey,
-                          fontWeight: FontWeight.w500),
-                    ],
-                  ),
-                ),
-                Expanded(child: const ItemsList()),
-              ],
+    return Scaffold(
+      backgroundColor: clrLightGrey.withValues(alpha: 0.3),
+      body: Padding(
+        padding: EdgeInsets.all(8.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TxtWidget(
+              txt: 'Menu',
+              fontsize: 24.sp,
+              fontWeight: FontWeight.w600,
+              color: clrBlack,
             ),
-          ),
-        ),
-
-        const VerticalDivider(width: 3),
-
-        // --- Right Cart Column ---
-        Flexible(
-          flex: 3,
-          child: Container(
-            padding: EdgeInsets.all(3.w),
-            child: cartState.when(
-              data: (items) {
-                if (items.isEmpty) {
-                  return const Center(child: Text('Cart is empty'));
-                }
-
-                return SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Card(
-                        child: Column(
-                          children: [
-                            gapH12,
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                TxtWidget(
-                                    txt: 'Order Details:',
-                                    color: clrMainAppClr,
-                                    fontsize: 16.sp,
-                                    fontWeight: FontWeight.w600),
-                                // TxtWidget(
-                                //     txt: 'Order No: 19278',
-                                //     color: clrMainAppClr,
-                                //     fontsize: 14.sp,
-                                //     fontWeight: FontWeight.w500),
-                              ],
-                            ),
-                            Column(children: items.map(cartItemCard).toList()),
-                            gapH8,
-                          ],
-                        ),
-                      ),
-
-                      gapH8,
-                      Card(
-                        child: Column(
-                          children: [
-                            SizedBox(height: 4),
-                            TxtWidget(
-                                txt: 'Order Type',
-                                fontsize: 15.sp,
-                                fontWeight: FontWeight.w600),
-                            SizedBox(height: 8),
-                            OrderTypeSelector(),
-                          ],
-                        ),
-                      ),
-                      gapH8,
-                      conditionalSelector(),
-                      gapH8,
-
-                      // Totals Card
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
+            gapH12,
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // --- Left Menu Column --- //
+                  Flexible(
+                    flex: MediaQuery.sizeOf(context).width >= 1200 ? 8 : 7,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TxtWidget(
+                            txt: 'Categories',
+                            fontsize: 18.sp,
+                            fontWeight: FontWeight.w600),
+                        gapH8,
+                        const CategorySelector(),
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                              vertical: 5.h, horizontal: 5.w),
+                          height: 30.h,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               TxtWidget(
-                                  txt: 'Order Cost',
-                                  fontsize: 15.sp,
+                                  txt: 'Select Menu',
+                                  fontsize: 18.sp,
                                   fontWeight: FontWeight.w600),
-                              gapH8,
-                              Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    TxtWidget(
-                                        txt: '$count item(s)',
-                                        fontsize: 15.sp,
-                                        fontWeight: FontWeight.w500),
-                                    TxtWidget(
-                                        txt: '$total SDG',
-                                        fontsize: 15.sp,
-                                        fontWeight: FontWeight.w600),
-                                  ]),
-                              if (orderType == OrderType.delivery)
-                                Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      TxtWidget(
-                                          txt: 'Delivery',
-                                          fontsize: 15.sp,
-                                          fontWeight: FontWeight.w500),
-                                      TxtWidget(
-                                          txt: '0 SDG',
-                                          fontsize: 15.sp,
-                                          fontWeight: FontWeight.w600),
-                                    ]),
-                              const Divider(),
-                              Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    TxtWidget(
-                                        txt: 'Total Cost',
-                                        fontsize: 15.sp,
-                                        fontWeight: FontWeight.w500),
-                                    TxtWidget(
-                                        txt: '$total SDG',
-                                        fontsize: 15.sp,
-                                        fontWeight: FontWeight.w600),
-                                  ]),
+                              TxtWidget(
+                                  txt: 'showing ${menuItems.length} items',
+                                  fontsize: 15.sp,
+                                  color: clrGrey,
+                                  fontWeight: FontWeight.w500),
                             ],
                           ),
                         ),
-                      ),
-                      gapH12,
-
-                      // Action Buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                minimumSize: Size(140.h, 80.h),
-                                foregroundColor: clrRed,
-                                padding:
-                                    EdgeInsets.symmetric(horizontal: 10.w)),
-                            onPressed: () => ref
-                                .read(cartAsyncNotifierProvider.notifier)
-                                .clearCart(),
-                            child: const Text('Clear Cart'),
-                          ),
-                          gapW8,
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                minimumSize: Size(140.h, 80.h),
-                                foregroundColor: clrGreen,
-                                padding:
-                                    EdgeInsets.symmetric(horizontal: 10.w)),
-                            onPressed: (selectedPayment == null &&
-                                    orderType == OrderType.takeaway)
-                                ? null
-                                : placeOrder,
-                            child: const Text('Complete Order'),
-                          ),
-                        ],
-                      ),
-                      gapH8,
-                    ],
+                        Expanded(child: const ItemsList()),
+                      ],
+                    ),
                   ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) => Center(child: Text('Error loading cart: $e')),
+
+                  const VerticalDivider(width: 3),
+
+                  // --- Right Cart Column --- //
+                  Flexible(
+                    flex: 3,
+                    child: cartState.when(
+                      data: (items) {
+                        if (items.isEmpty) {
+                          return const Center(child: Text('Cart is empty'));
+                        }
+
+                        return SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // --- Cart Items --- //
+                              Card(
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.r)),
+                                child: Padding(
+                                  padding: EdgeInsets.all(8.w),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      TxtWidget(
+                                          txt: 'Order Details:',
+                                          fontsize: 16.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: clrMainAppClr),
+                                      gapH8,
+                                      Column(
+                                        children:
+                                            items.map(cartItemCard).toList(),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              gapH8,
+
+                              // --- Order Type Selector --- //
+                              Card(
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.r)),
+                                child: Padding(
+                                  padding: EdgeInsets.all(8.w),
+                                  child: OrderTypeSelector(),
+                                ),
+                              ),
+                              gapH8,
+
+                              conditionalSelector(),
+                              gapH8,
+
+                              // --- Totals Card --- //
+                              Card(
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.r)),
+                                child: Padding(
+                                  padding: EdgeInsets.all(12.w),
+                                  child: Column(
+                                    children: [
+                                      TxtWidget(
+                                          txt: 'Order Cost',
+                                          fontsize: 16.sp,
+                                          fontWeight: FontWeight.w600),
+                                      gapH8,
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          TxtWidget(
+                                              txt: '$count item(s)',
+                                              fontsize: 15.sp,
+                                              fontWeight: FontWeight.w500),
+                                          TxtWidget(
+                                              txt: '$total SDG',
+                                              fontsize: 15.sp,
+                                              fontWeight: FontWeight.w600),
+                                        ],
+                                      ),
+                                      if (orderType == OrderType.delivery)
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            TxtWidget(
+                                                txt: 'Delivery',
+                                                fontsize: 15.sp,
+                                                fontWeight: FontWeight.w500),
+                                            TxtWidget(
+                                                txt: '0 SDG',
+                                                fontsize: 15.sp,
+                                                fontWeight: FontWeight.w600),
+                                          ],
+                                        ),
+                                      const Divider(),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          TxtWidget(
+                                              txt: 'Total Cost',
+                                              fontsize: 15.sp,
+                                              fontWeight: FontWeight.w500),
+                                          TxtWidget(
+                                              txt: '$total SDG',
+                                              fontsize: 15.sp,
+                                              fontWeight: FontWeight.w600),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              gapH12,
+
+                              // --- Action Buttons --- //
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        minimumSize: Size(140.h, 60.h),
+                                        backgroundColor: clrRed,foregroundColor: clrWhite),
+                                    onPressed: () => ref
+                                        .read(
+                                            cartAsyncNotifierProvider.notifier)
+                                        .clearCart(),
+                                    child: const Text('Clear Cart'),
+                                  ),
+                                  gapW8,
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        minimumSize: Size(140.h, 60.h),
+                                        backgroundColor: clrGreen,foregroundColor: clrWhite),
+                                    onPressed: (selectedPayment == null &&
+                                            orderType == OrderType.takeaway)
+                                        ? null
+                                        : placeOrder,
+                                    child: const Text('Complete Order'),
+                                  ),
+                                ],
+                              ),
+                              gapH12,
+                            ],
+                          ),
+                        );
+                      },
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (e, st) =>
+                          Center(child: Text('Error loading cart: $e')),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

@@ -1,9 +1,10 @@
-// lib/features/orders_list/place_order/orders_provider.dart
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_template/core/db_helper.dart';
 import 'package:starter_template/features/logs/log_model.dart';
+import 'package:starter_template/features/menu/cart/cart_model.dart';
+import 'package:starter_template/features/menu/cart/cart_provider.dart';
 import 'package:starter_template/features/menu/selctors/order_type_provider.dart';
 import 'package:starter_template/features/orders_list/place_order/order_model.dart';
 
@@ -11,8 +12,6 @@ final ordersSelectedDateProvider =
     StateProvider<DateTime>((_) => DateTime.now());
 final ordersFilterTypeProvider = StateProvider<String?>((_) => null);
 final ordersFilterPayProvider = StateProvider<String?>((_) => null);
-final expandedOrderIdProvider = StateProvider<int?>((_) => null);
-
 final currentUserIdProvider = Provider<String>((_) => 'user-123');
 
 final ordersAsyncProvider =
@@ -29,57 +28,107 @@ class OrdersNotifier extends AsyncNotifier<List<OrderModel>> {
     final type = ref.watch(ordersFilterTypeProvider);
     final pay = ref.watch(ordersFilterPayProvider);
     return DBHelper.getOrders(
-      date: _fmtDate(date),
-      orderType: type,
-      paymentType: pay,
-    );
+        date: _fmtDate(date), orderType: type, paymentType: pay);
   }
 
+  // ✅ safer: just update the provider date
+  void setDate(DateTime d) {
+    ref.read(ordersSelectedDateProvider.notifier).state = d;
+    ref.invalidateSelf(); // triggers build() again with new date
+  }
+
+  // ✅ manual reload (e.g. refresh button)
   Future<void> reload() async {
     state = const AsyncValue.loading();
-    state = AsyncValue.data(await build());
+    try {
+      // explicitly read without watch
+      final date = ref.read(ordersSelectedDateProvider);
+      final type = ref.read(ordersFilterTypeProvider);
+      final pay = ref.read(ordersFilterPayProvider);
+
+      final result = await DBHelper.getOrders(
+        date: _fmtDate(date),
+        orderType: type,
+        paymentType: pay,
+      );
+      state = AsyncValue.data(result);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
   }
 
-  Future<void> placeOrder({
-    required String orderType,
-    required String orderStatus,
-    required String paymentStatus,
-    String? paymentType,
-    String? transactionId,
-    String? tableName,
-    String? deliveryAddress,
-    String? deliveryOwner,
-    String? deliveryPhone,
-  }) async {
+  Future<void> placeOrUpdateOrder(
+      {OrderModel? pendingOrder,
+      required String orderType,
+      required String paymentStatus,
+      String? tableName,
+      String? deliveryAddress,
+      String? deliveryOwner,
+      String? deliveryPhone,
+      String? deliveryInstructions,
+      String? paymentType,
+      String? transactionId}) async {
     final items = await DBHelper.getCartItems();
     if (items.isEmpty) throw Exception("Cart is empty");
 
     final total = items.fold<double>(0, (s, e) => s + e.price * e.quantity);
     final count = items.fold<int>(0, (s, e) => s + e.quantity);
 
-    final order = OrderModel(
-      orderType: orderType,
-      orderStatus: orderStatus,
-      paymentStatus: paymentStatus,
-      paymentType:orderType==OrderType.dinein.name?paymentStatus: paymentType,
-      totalAmount: total,
-      totalItems: count,
-      transactionId: transactionId ?? _generateTxnId(),
-      tableName: tableName,
-      deliveryAddress: deliveryAddress,
-      deliveryOwner: deliveryOwner,
-      deliveryPhone: deliveryPhone,
-      createdAt: DateTime.now(),
-      items: items,
-    );
+    if (pendingOrder != null) {
+      final updated = pendingOrder.copyWith(
+          totalAmount: total,
+          totalItems: count,
+          items: items,
+          tableName: tableName,
+          deliveryAddress: deliveryAddress ?? pendingOrder.deliveryAddress,
+          deliveryOwner: deliveryOwner ?? pendingOrder.deliveryOwner,
+          deliveryPhone: deliveryPhone ?? pendingOrder.deliveryPhone,
+          deliveryInstructions:
+              deliveryInstructions ?? pendingOrder.deliveryInstructions,
+          orderStatus: OrderStatus.completed.name,
+          paymentStatus: paymentStatus,
+          paymentType: paymentType ?? pendingOrder.paymentType);
+      await DBHelper.updateOrder(updated);
+      debugPrint(
+          '++++++++++++++++ the updated order is : \n ${updated.toMap()}');
+      await _log('order_updated', 'order', pendingOrder.id.toString(),
+          'Updated order ${pendingOrder.id} with $count items, $total total');
+    } else {
+      final newOrder = OrderModel(
+        orderType: orderType,
+        orderStatus: orderType == OrderType.takeaway.name
+            ? OrderStatus.completed.name
+            : OrderStatus.pending.name,
+        paymentStatus: paymentStatus,
+        paymentType: paymentType,
+        tableName: tableName,
+        deliveryAddress: deliveryAddress,
+        deliveryOwner: deliveryOwner,
+        deliveryPhone: deliveryPhone,
+        totalAmount: total,
+        totalItems: count,
+        transactionId: transactionId ?? _generateTxnId(),
+        createdAt: DateTime.now(),
+        items: items,
+      );
+      final id = await DBHelper.insertOrder(newOrder);
+      debugPrint('++++++++++++++++ the new order is : \n ${newOrder.toMap()}');
+      await _log('order_placed', 'order', id.toString(),
+          'Placed $orderType order ($count items, $total total)');
+    }
 
-    final id = await DBHelper.insertOrder(order);
-    debugPrint('Order placed details are: ${order.toMap()}');
     await DBHelper.clearCart();
-
-    await _log('order_placed', 'order', id.toString(),
-        'Placed $orderType order ($count items, $total total)');
+    ref.invalidate(cartAsyncNotifierProvider);
     await reload();
+  }
+
+  Future<void> loadOrderIntoCart(OrderModel order) async {
+    await DBHelper.clearCart();
+    for (final item in order.items) {
+      await DBHelper.insertCartItem(
+          CartItemModel.fromOrderItem(item, order.orderType));
+    }
+    ref.invalidate(cartAsyncNotifierProvider);
   }
 
   Future<void> cancelOrder(int orderId) async {
@@ -89,11 +138,7 @@ class OrdersNotifier extends AsyncNotifier<List<OrderModel>> {
     await reload();
   }
 
-  String _generateTxnId() {
-    // final r = Random();
-    // return 'TXN-${DateTime.now().millisecondsSinceEpoch}-${r.nextInt(99999)}';
-    return 'will be updated later'; // 6-digit code
-  }
+  String _generateTxnId() => 'TXN-${DateTime.now().millisecondsSinceEpoch}';
 
   Future<void> _log(
       String action, String entity, String? entityId, String details) async {

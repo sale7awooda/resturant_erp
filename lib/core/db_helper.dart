@@ -1,4 +1,3 @@
-// lib/core/db_helper.dart
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:starter_template/features/logs/log_model.dart';
@@ -17,7 +16,7 @@ class DBHelper {
       path,
       version: 1,
       onCreate: (db, version) async {
-        // --- CART TABLE ---
+        // --- CART ---
         await db.execute('''
           CREATE TABLE cart (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +31,7 @@ class DBHelper {
           )
         ''');
 
-        // --- ORDERS TABLE ---
+        // --- ORDERS ---
         await db.execute('''
           CREATE TABLE orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,7 +53,7 @@ class DBHelper {
           )
         ''');
 
-        // --- LOGS TABLE ---
+        // --- LOGS ---
         await db.execute('''
           CREATE TABLE logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,33 +70,33 @@ class DBHelper {
   }
 
   static Database get db {
-    if (_db == null) {
-      throw Exception('DB not initialized. Call DBHelper.init() first.');
-    }
+    if (_db == null) throw Exception('DB not initialized.');
     return _db!;
   }
 
   // ------------------- CART -------------------
-  static Future<int> insertCartItem(CartItemModel item) async =>
-      await db.insert('cart', item.toMap());
+  static Future<int> insertCartItem(CartItemModel item) =>
+      db.insert('cart', item.toMap());
 
   static Future<List<CartItemModel>> getCartItems() async {
     final rows = await db.query('cart');
     return rows.map((m) => CartItemModel.fromMap(m)).toList();
   }
 
-  static Future<int> updateCartItem(CartItemModel item) async =>
-      await db.update('cart', item.toMap(),
-          where: 'id = ?', whereArgs: [item.dbId]);
+  static Future<int> updateCartItem(CartItemModel item) =>
+      db.update('cart', item.toMap(), where: 'id = ?', whereArgs: [item.dbId]);
 
-  static Future<int> deleteCartItem(int id) async =>
-      await db.delete('cart', where: 'id = ?', whereArgs: [id]);
+  static Future<int> deleteCartItem(int id) =>
+      db.delete('cart', where: 'id = ?', whereArgs: [id]);
 
-  static Future<int> clearCart() async => await db.delete('cart');
+  static Future<int> clearCart() => db.delete('cart');
 
   // ------------------- ORDERS -------------------
-  static Future<int> insertOrder(OrderModel order) async =>
-      await db.insert('orders', order.toMap());
+  static Future<int> insertOrder(OrderModel order) =>
+      db.insert('orders', order.toMap());
+
+  static Future<int> updateOrder(OrderModel order) => db
+      .update('orders', order.toMap(), where: 'id = ?', whereArgs: [order.id]);
 
   static Future<List<OrderModel>> getOrders({
     String? date,
@@ -108,56 +107,48 @@ class DBHelper {
     String where = 'WHERE 1=1';
     final args = <dynamic>[];
 
-    if (date != null && date.isNotEmpty) {
+    if (date != null) {
       where += ' AND DATE(createdAt) = ?';
       args.add(date);
     }
-    if (orderType != null && orderType.isNotEmpty) {
+    if (orderType != null) {
       where += ' AND orderType = ?';
       args.add(orderType);
     }
-    if (paymentType != null && paymentType.isNotEmpty) {
+    if (paymentType != null) {
       where += ' AND paymentType = ?';
       args.add(paymentType);
     }
-    if (orderStatus != null && orderStatus.isNotEmpty) {
+    if (orderStatus != null) {
       where += ' AND orderStatus = ?';
       args.add(orderStatus);
     }
 
     final rows = await db.rawQuery(
-      'SELECT * FROM orders $where ORDER BY createdAt DESC',
-      args,
-    );
+        'SELECT * FROM orders $where ORDER BY createdAt DESC', args);
     return rows.map((m) => OrderModel.fromMap(m)).toList();
   }
 
-  static Future<int> updateOrder(OrderModel order) async {
-    if (order.id == null) return 0;
-    return await db.update('orders', order.toMap(),
-        where: 'id = ?', whereArgs: [order.id]);
-  }
-
-  static Future<int> updateOrderStatus({
-    required int id,
-    required String orderStatus,
-  }) async =>
-      await db.update('orders', {'orderStatus': orderStatus},
-          where: 'id = ?', whereArgs: [id]);
-
-  static Future<int> cancelOrder(int id) async =>
-      await db.update('orders', {'orderStatus': 'canceled'},
-          where: 'id = ?', whereArgs: [id]);
-
+  static Future<int> cancelOrder(int id) => db.update(
+      'orders',
+      {
+        'orderStatus': OrderStatus.cancelled.name,
+        'paymentType': OrderStatus.cancelled.name,
+        'paymentStatus': OrderStatus.cancelled.name,
+        'totalAmount': '0',
+        'totalItems': '0'
+      },
+      where: 'id = ?',
+      whereArgs: [id]);
   // ------------------- LOGS -------------------
-  static Future<int> insertLog(LogModel log) async =>
-      await db.insert('logs', log.toMap());
+  static Future<int> insertLog(LogModel log) => db.insert('logs', log.toMap());
 
   static Future<List<LogModel>> getLogs({
     String? action,
     String? entity,
     String? entityId,
     String? userId,
+    String? date, // YYYY-MM-DD filtering
   }) async {
     String where = 'WHERE 1=1';
     final args = <dynamic>[];
@@ -178,9 +169,14 @@ class DBHelper {
       where += ' AND userId = ?';
       args.add(userId);
     }
+    if (date != null) {
+      where += ' AND DATE(timestamp) = ?';
+      args.add(date);
+    }
 
     final rows = await db.rawQuery(
         'SELECT * FROM logs $where ORDER BY timestamp DESC', args);
     return rows.map((m) => LogModel.fromMap(m)).toList();
   }
+
 }

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:starter_template/common/widgets/txt_widget.dart';
 import 'package:starter_template/features/menu/menu_items/menu_item_card_widget.dart';
 import 'package:starter_template/features/menu/menu_items/menu_items_providers.dart';
+import 'package:starter_template/features/orders_list/place_order/order_model.dart';
 
 class ItemsList extends ConsumerWidget {
-  const ItemsList({super.key});
+  final OrderModel? order;
+  const ItemsList({super.key, this.order});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(filteredMenuProvider);
@@ -19,7 +22,10 @@ class ItemsList extends ConsumerWidget {
             // mainAxisExtent: 260,
             childAspectRatio: .90),
         itemCount: items.length,
-        itemBuilder: (context, i) => ItemCard(item: items[i]),
+        itemBuilder: (context, i) => ItemCard(
+          item: items[i],
+          order: order,
+        ),
       ),
     );
   }

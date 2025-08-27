@@ -12,103 +12,86 @@ class OrderTypeSelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final orderType = ref.watch(orderTypeProvider);
 
+    // Define the icons for each order type
+    final Map<OrderType, IconData> icons = {
+      OrderType.takeaway: Icons.shopping_bag_rounded,
+      OrderType.dinein: Icons.dinner_dining_outlined,
+      OrderType.delivery: Icons.delivery_dining_outlined,
+    };
+
     return Column(
       mainAxisSize: MainAxisSize.min,
-      // mainAxisAlignment: MainAxisAlignment.start,
-      // crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // --- Choice Chips --- //
-        Wrap(
-            spacing: 5.w,
-            // shrinkWrap: true,
-            // scrollDirection: Axis.horizontal,
-            direction: Axis.horizontal,
-            children: [
-              ChoiceChip(
-                showCheckmark: false,
-                selectedColor: clrMainAppClr,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.r)),
-                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 3.h),
-                label: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.shopping_bag_rounded,
-                        color: orderType.name == OrderType.takeaway.name
-                            ? clrWhite
-                            : clrBlack, size: 30.h),
-                    TxtWidget(
-                        txt: OrderType.takeaway.name.toUpperCase(),
-                        color: orderType.name == OrderType.takeaway.name
-                            ? clrWhite
-                            : clrBlack,
-                        fontsize: MediaQuery.sizeOf(context).width >=1200? 11.sp:13.sp,
-                        fontWeight: FontWeight.w500)
-                  ],
-                ),
-                selected: orderType.name == OrderType.takeaway.name,
-                onSelected: (_) => ref.read(orderTypeProvider.notifier).state =
-                    OrderType.takeaway,
-              ),
-              ChoiceChip(
-                showCheckmark: false,
-                selectedColor: clrMainAppClr,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.r)),
-                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 0),
-                label: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.dinner_dining_outlined,
-                        color: orderType.name == OrderType.dinein.name
-                            ? clrWhite
-                            : clrBlack,
-                        size: 30.h),
-                    TxtWidget(
-                        txt: OrderType.dinein.name
-                            .toUpperCase()
-                            .split('DINE')
-                            .join('DINE '),
-                        color: orderType.name == OrderType.dinein.name
-                            ? clrWhite
-                            : clrBlack,
-                        fontsize: MediaQuery.sizeOf(context).width >=1200? 11.sp:13.sp,
-                        fontWeight: FontWeight.w500)
-                  ],
-                ),
-                selected: orderType.name == OrderType.dinein.name,
-                onSelected: (_) => ref.read(orderTypeProvider.notifier).state =
-                    OrderType.dinein,
-              ),
-              ChoiceChip(
-                  showCheckmark: false,
-                  selectedColor: clrMainAppClr,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.r)),
-                  padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 0),
-                  label: Column(
+        gapH4,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            TxtWidget(
+              txt: "Select Order Type",
+              fontsize:
+                  MediaQuery.sizeOf(context).width >= 1200 ? 12.sp : 14.sp,
+              fontWeight: FontWeight.w600,
+              color: clrMainAppClr,
+            ),Icon(Icons.menu_rounded, color: clrMainAppClr, size: 28.sp)
+          ],
+        ),
+        SizedBox(height: 10.h),
+        Center(
+          child: Wrap(
+            spacing: 7.w,
+            runSpacing: 7.h,
+            children: OrderType.values.map((type) {
+              final isSelected = orderType == type;
+              return InkWell(
+                borderRadius: BorderRadius.circular(12.r),
+                onTap: () => ref.read(orderTypeProvider.notifier).state = type,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding:
+                      EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
+                  decoration: BoxDecoration(
+                    color: isSelected ? clrMainAppClr : Colors.white,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                        color: isSelected ? clrMainAppClr : clrLightGrey,
+                        width: 1.5.w),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: clrMainAppClr.withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            )
+                          ]
+                        : [],
+                  ),
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.dinner_dining_outlined,
-                          color: orderType.name == OrderType.delivery.name
-                              ? clrWhite
-                              : clrBlack,
-                          size: 30.h),
+                      Icon(
+                        icons[type],
+                        size: 28.sp,
+                        color: isSelected ? clrWhite : clrBlack,
+                      ),
+                      SizedBox(height: 5.h),
                       TxtWidget(
-                          txt: OrderType.delivery.name.toUpperCase(),
-                          color: orderType.name == OrderType.delivery.name
-                              ? clrWhite
-                              : clrBlack,
-                          fontsize:MediaQuery.sizeOf(context).width >=1200? 11.sp:13.sp,
-                          fontWeight: FontWeight.w500)
+                        txt: type.name.toUpperCase(),
+                        color: isSelected ? clrWhite : clrBlack,
+                        fontsize: MediaQuery.sizeOf(context).width >= 1200
+                            ? 11.sp
+                            : 13.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ],
                   ),
-                  selected: orderType.name == OrderType.delivery.name,
-                  onSelected: (_) => ref
-                      .read(orderTypeProvider.notifier)
-                      .state = OrderType.delivery)
-            ]),
-        gapH12,
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        SizedBox(height: 12.h),
       ],
     );
   }

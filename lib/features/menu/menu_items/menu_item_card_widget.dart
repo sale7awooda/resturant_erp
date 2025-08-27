@@ -8,10 +8,12 @@ import 'package:starter_template/features/menu/cart/cart_provider.dart';
 import 'package:starter_template/features/menu/menu_items/menu_items_models.dart';
 import 'package:starter_template/features/menu/menu_items/menu_items_providers.dart';
 import 'package:starter_template/features/menu/selctors/order_type_provider.dart';
+import 'package:starter_template/features/orders_list/place_order/order_model.dart';
 
 class ItemCard extends ConsumerWidget {
   final MenuItemModel item;
-  const ItemCard({super.key, required this.item});
+  final OrderModel? order;
+  const ItemCard({super.key, required this.item, this.order});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -123,7 +125,9 @@ class ItemCard extends ConsumerWidget {
             ),
             Center(
               child: ElevatedButton.icon(
-                onPressed: selectedOption == null
+                onPressed: (selectedOption == null ||
+                        ((order?.orderStatus == OrderStatus.cancelled.name ||
+                            order?.orderStatus == OrderStatus.completed.name)))
                     ? null
                     : () async {
                         ref
@@ -142,7 +146,10 @@ class ItemCard extends ConsumerWidget {
                             ));
                       },
                 icon: const Icon(Icons.add_shopping_cart),
-                label: const Text('Add to Order'),
+                label: ((order?.orderStatus == OrderStatus.cancelled.name ||
+                        order?.orderStatus == OrderStatus.completed.name))
+                    ? const Text('Canceled/Completed')
+                    : const Text('Add to Order'),
               ),
             ),
           ],

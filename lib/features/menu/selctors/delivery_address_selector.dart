@@ -10,46 +10,87 @@ class DeliveryAddressSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final address = ref.watch(deliveryAddressProvider);
+    final addresses = ref.watch(deliveryAddressProvider);
     final selected = ref.watch(selectedDeliveryAddressProvider);
 
-    return Center(
-          child: Wrap(
-      spacing: 3.h,runSpacing: 3.h,
-      direction: Axis.horizontal,
-      // scrollDirection: Axis.horizontal,
-      // shrinkWrap: true,
-      // physics: AlwaysScrollableScrollPhysics(),
-      children: address.map((a) {
-        final isSelected = selected == a;
-        return ChoiceChip(
-            showCheckmark: false,
-            selectedColor: clrMainAppClr,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.r),
-                side: BorderSide(
-                    color: isSelected ? clrMainAppClr : clrLightGrey,
-                    width: 2.w)),
-            labelPadding: EdgeInsets.all(0),
-            label: Container(
-              alignment: Alignment.center,
-              height: 40.h,
-              width: 50.w,
-              child: TxtWidget(
-                  txt: a.toUpperCase(),
-                  color: isSelected ? clrWhite : clrBlack,
-                  fontWeight: FontWeight.w500,
-                  textAlign: TextAlign.center,
-                  fontsize: 12.sp),
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 10.h),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                TxtWidget(
+                  txt: "Delivery Address",
+                  fontsize:
+                      MediaQuery.sizeOf(context).width >= 1200 ? 12.sp : 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: clrMainAppClr,
+                ),
+                Icon(Icons.location_on, color: clrMainAppClr, size: 28.sp),
+              ],
             ),
-            selected: isSelected,
-            onSelected: (_) {
-              ref.read(selectedDeliveryAddressProvider.notifier).state =
-                  a;
-              debugPrint(
-                  '=================================\n Selected table: $a');
-            });
-      }).toList()),
-        );
+            gapH8,
+            Center(
+              child: Wrap(
+                spacing: 5.w,
+                runSpacing: 5.h,
+                children: addresses.map((addr) {
+                  final isSelected = selected == addr;
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(12.r),
+                    onTap: () {
+                      ref.read(selectedDeliveryAddressProvider.notifier).state =
+                          addr;
+                      debugPrint("✅ Selected address: $addr");
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      height: 50.h,
+                      width: 80.w,
+                      alignment: Alignment.center,
+                      // padding: EdgeInsets.symmetric(horizontal: 8.w),
+                      decoration: BoxDecoration(
+                        color: isSelected ? clrMainAppClr : Colors.white,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: isSelected ? clrMainAppClr : clrLightGrey,
+                          width: 1.5.w,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: clrMainAppClr.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                )
+                              ]
+                            : [],
+                      ),
+                      child: TxtWidget(
+                        txt: addr.toUpperCase(),
+                        textAlign: TextAlign.center,
+                        color: isSelected ? clrWhite : clrBlack,
+                        fontWeight: FontWeight.w500,
+                        fontsize: MediaQuery.sizeOf(context).width >= 1200
+                            ? 9.sp
+                            : 11.sp,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

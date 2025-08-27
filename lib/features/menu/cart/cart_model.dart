@@ -4,7 +4,6 @@ class CartItemModel {
   final String name;
   final double price;
   final String? selectedOption;
-  // final String? selectedTable;
   final String orderType;
   final String? imageUrl;
   final int quantity;
@@ -15,20 +14,21 @@ class CartItemModel {
     required this.name,
     required this.price,
     this.selectedOption,
-    // this.selectedTable,
     required this.orderType,
     this.imageUrl,
     this.quantity = 1,
   });
 
-  CartItemModel copyWith({int? dbId, int? quantity, String? selectedTable}) {
+  CartItemModel copyWith({
+    int? dbId,
+    int? quantity,
+  }) {
     return CartItemModel(
       dbId: dbId ?? this.dbId,
       itemId: itemId,
       name: name,
       price: price,
       selectedOption: selectedOption,
-      // selectedTable: selectedTable,
       orderType: orderType,
       imageUrl: imageUrl,
       quantity: quantity ?? this.quantity,
@@ -42,7 +42,6 @@ class CartItemModel {
       'name': name,
       'price': price,
       'selectedOption': selectedOption,
-      // 'selectedTable': selectedTable,
       'orderType': orderType,
       'imageUrl': imageUrl,
       'quantity': quantity,
@@ -56,10 +55,22 @@ class CartItemModel {
       name: map['name'] as String,
       price: (map['price'] as num).toDouble(),
       selectedOption: map['selectedOption'] as String?,
-      // selectedTable: map['selectedTable'] as String?,
       orderType: map['orderType'] as String,
       imageUrl: map['imageUrl'] as String?,
       quantity: map['quantity'] as int,
+    );
+  }
+
+  /// Build CartItemModel from an existing CartItemModel (used for pre-filling cart from an order)
+  factory CartItemModel.fromOrderItem(CartItemModel item, String orderType) {
+    return CartItemModel(
+      itemId: item.itemId,
+      name: item.name,
+      price: item.price,
+      selectedOption: item.selectedOption,
+      orderType: orderType,
+      imageUrl: item.imageUrl,
+      quantity: item.quantity,
     );
   }
 }

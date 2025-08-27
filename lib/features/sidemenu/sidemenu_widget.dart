@@ -19,16 +19,24 @@ class _MainLayoutState extends State<MainLayout> {
 
   // use a map list so we can access route/title/icon cleanly
   final List<Map<String, dynamic>> menuItems = [
-    {'icon': Icons.dashboard, 'title': 'Dashboard', 'route': '/dashboard'},
-    {'icon': Icons.restaurant_menu, 'title': 'Menu', 'route': '/menu'},
-    {'icon': Icons.list_alt, 'title': 'Orders List', 'route': '/orders'},
+    {
+      'icon': Icons.dashboard_rounded,
+      'title': 'Dashboard',
+      'route': '/dashboard'
+    },
+    {'icon': Icons.restaurant_menu_rounded, 'title': 'Menu', 'route': '/menu'},
+    {
+      'icon': Icons.list_alt_rounded,
+      'title': 'Orders List',
+      'route': '/orders'
+    },
     // {'icon': Icons.receipt_long, 'title': 'Bills', 'route': '/bills'},
-    {'icon': Icons.inventory_2, 'title': 'Inventory', 'route': '/inventory'},
+    {'icon': Icons.kitchen_outlined, 'title': 'Kitchen', 'route': '/inventory'},
     // {'icon': Icons.history, 'title': 'History', 'route': '/history'},
-    {'icon': Icons.people, 'title': 'Staff', 'route': '/staff'},
-    {'icon': Icons.bar_chart, 'title': 'Reports', 'route': '/reports'},
-    {'icon': Icons.history, 'title': 'Logs', 'route': '/logs'},
-    {'icon': Icons.settings, 'title': 'Settings', 'route': '/settings'},
+    {'icon': Icons.people_alt_rounded, 'title': 'Staff', 'route': '/staff'},
+    {'icon': Icons.bar_chart_rounded, 'title': 'Reports', 'route': '/reports'},
+    {'icon': Icons.history_rounded, 'title': 'Logs', 'route': '/logs'},
+    {'icon': Icons.settings_rounded, 'title': 'Settings', 'route': '/settings'},
   ];
 
   @override

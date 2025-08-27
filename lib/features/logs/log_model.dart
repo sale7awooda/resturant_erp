@@ -1,11 +1,10 @@
-// lib/features/logs/log_model.dart
 class LogModel {
   final int? id;
   final String action;        // e.g. cart_add, order_placed, order_canceled
   final String entity;        // e.g. cart, order, user
   final String? entityId;     // e.g. dbId, orderId
-  final String details;       // human readable
-  final String userId;
+  final String details;       // human readable details
+  final String userId;        // the user who did the action
   final DateTime timestamp;
 
   LogModel({

@@ -1,12 +1,10 @@
-// lib/features/menu/cart/cart_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_template/core/db_helper.dart';
 import 'package:starter_template/features/logs/log_model.dart';
 import 'package:starter_template/features/menu/cart/cart_model.dart';
 import 'package:starter_template/features/orders_list/place_order/orders_provider.dart';
 
-final cartAsyncNotifierProvider =
-    AsyncNotifierProvider<CartNotifier, List<CartItemModel>>(
+final cartAsyncNotifierProvider = AsyncNotifierProvider<CartNotifier, List<CartItemModel>>(
   () => CartNotifier(),
 );
 
@@ -19,6 +17,14 @@ class CartNotifier extends AsyncNotifier<List<CartItemModel>> {
   Future<void> reload() async {
     state = const AsyncValue.loading();
     state = AsyncValue.data(await DBHelper.getCartItems());
+  }
+
+  Future<void> setCartItems(List<CartItemModel> items) async {
+    await DBHelper.clearCart();
+    for (final item in items) {
+      await DBHelper.insertCartItem(item);
+    }
+    await reload();
   }
 
   Future<void> addToCart(CartItemModel item) async {
@@ -68,8 +74,7 @@ class CartNotifier extends AsyncNotifier<List<CartItemModel>> {
     await reload();
   }
 
-  Future<void> _log(
-      String action, String entity, String? entityId, String details) async {
+  Future<void> _log(String action, String entity, String? entityId, String details) async {
     await DBHelper.insertLog(LogModel(
       action: action,
       entity: entity,

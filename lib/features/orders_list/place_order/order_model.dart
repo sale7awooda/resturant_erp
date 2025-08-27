@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:starter_template/features/menu/cart/cart_model.dart';
 
+enum OrderStatus { pending, completed, cancelled }
+
 class OrderModel {
   final int? id;
   final String orderType; // dinein, takeaway, delivery
@@ -12,7 +14,6 @@ class OrderModel {
   final int totalItems;
   final String? transactionId;
   final String? tableName;
-
   // Delivery-only
   final String? deliveryAddress;
   final String? deliveryOwner;
