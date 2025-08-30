@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:starter_template/core/db_helper.dart';
-import 'log_model.dart';
+import 'package:starter_template/features/logs/log_model.dart';
+import 'logs_dao.dart';
 
 class LogsNotifier extends StateNotifier<AsyncValue<List<LogModel>>> {
   LogsNotifier() : super(const AsyncValue.loading()) {
@@ -12,16 +12,26 @@ class LogsNotifier extends StateNotifier<AsyncValue<List<LogModel>>> {
     String? entity,
     String? entityId,
     String? userId,
-    String? date, // YYYY-MM-DD format
+    DateTime? startDate,
+    DateTime? endDate,
+    int? limit,
+    int? offset,
   }) async {
     try {
-      final logs = await DBHelper.getLogs(
+      state = const AsyncValue.loading();
+
+      final logsData = await LogsDao.getAll(
         action: action,
         entity: entity,
         entityId: entityId,
         userId: userId,
-        date: date,
+        startDate: startDate,
+        endDate: endDate,
+        limit: limit,
+        offset: offset,
       );
+
+      final logs = logsData.map((map) => LogModel.fromMap(map)).toList();
       state = AsyncValue.data(logs);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -29,8 +39,12 @@ class LogsNotifier extends StateNotifier<AsyncValue<List<LogModel>>> {
   }
 
   Future<void> addLog(LogModel log) async {
-    await DBHelper.insertLog(log);
-    await loadLogs();
+    try {
+      await LogsDao.insert(log.toMap());
+      await loadLogs();
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
   }
 }
 

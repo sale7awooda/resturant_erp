@@ -4,7 +4,8 @@ late String? hex;
 // final Color clrMainSeed = Colors.white;
 const Color clrGreen = Colors.green;
 const Color clrMainAppClr = Colors.blue;
-const Color clrMainAppClrLight = Color.fromRGBO(144, 202, 249, 1); //parseColor('#58c3ed');
+const Color clrMainAppClrLight =
+    Color.fromRGBO(144, 202, 249, 1); //parseColor('#58c3ed');
 const Color clrLightGreen = Color.fromRGBO(197, 240, 143, 1);
 const Color clrDarkGreen = Color.fromRGBO(74, 124, 14, 1);
 const Color clrRed = Colors.red; // Color.fromRGBO(174, 28, 18, 1);

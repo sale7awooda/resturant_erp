@@ -98,11 +98,13 @@ class CategorySelector extends ConsumerWidget {
                 alignment: Alignment.center,
                 height: 50.h,
                 child: TxtWidget(
-                    txt: c.toUpperCase().split('ALL').join('ALL '),
-                    color: isSelected ? clrWhite : clrBlack,
-                    fontWeight: FontWeight.w600,
-                    textAlign: TextAlign.center,
-                    fontsize: 12.sp),
+                  txt: c.toUpperCase().split('ALL').join('ALL '),
+                  color: isSelected ? clrWhite : clrBlack,
+                  fontWeight: FontWeight.w600,
+                  textAlign: TextAlign.center,
+                  fontsize:
+                      MediaQuery.sizeOf(context).width >= 1200 ? 10.sp : 12.sp,
+                ),
               ),
               selected: isSelected,
               onSelected: (_) {

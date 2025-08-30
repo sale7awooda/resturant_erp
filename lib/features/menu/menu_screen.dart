@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'package:starter_template/common/widgets/txt_widget.dart';
 import 'package:starter_template/core/constants.dart';
+import 'package:starter_template/features/menu/address/delivery_address_provider.dart';
+import 'package:starter_template/features/menu/address/delivery_address_selector.dart';
+import 'package:starter_template/features/menu/cart/cart_model.dart';
 import 'package:starter_template/features/menu/cart/cart_provider.dart';
 import 'package:starter_template/features/menu/categories/category_selector.dart';
 import 'package:starter_template/features/menu/menu_items/menu_items_list_widget.dart';
 import 'package:starter_template/features/menu/menu_items/menu_items_providers.dart';
 import 'package:starter_template/features/menu/payment_method/payment_method_provider.dart';
 import 'package:starter_template/features/menu/payment_method/payment_selection_tiles.dart';
-import 'package:starter_template/features/menu/selctors/delivery_address_provider.dart';
-import 'package:starter_template/features/menu/selctors/delivery_address_selector.dart';
 import 'package:starter_template/features/menu/selctors/order_type_provider.dart';
 import 'package:starter_template/features/menu/selctors/order_type_selctor.dart';
-import 'package:starter_template/features/menu/selctors/table_provider.dart';
-import 'package:starter_template/features/menu/selctors/table_selector.dart';
-import 'package:starter_template/features/orders_list/place_order/orders_provider.dart';
+import 'package:starter_template/features/menu/table/table_provider.dart';
+import 'package:starter_template/features/menu/table/table_selector.dart';
+import 'package:starter_template/features/orders/orders_provider.dart';
 
 class MenuScreen extends ConsumerWidget {
   const MenuScreen({super.key});
@@ -29,17 +31,22 @@ class MenuScreen extends ConsumerWidget {
     final orderType = ref.watch(orderTypeProvider);
     final selectedPayment = ref.watch(paymentMethodProvider);
     final selectedTable = ref.watch(selectedTableProvider);
-    final selectedArea = ref.watch(selectedDeliveryAddressProvider);
+    final selectedArea = ref.watch(selectedDeliveryAddressProvider)?.name;
+    final selectedAreaCost = ref.watch(selectedDeliveryAddressProvider)?.cost;
+
+    final double screenWidth = MediaQuery.sizeOf(context).width;
+    final bool isLargeScreen = screenWidth >= 1200;
 
     void placeOrder() async {
       await ref.read(ordersAsyncProvider.notifier).placeOrUpdateOrder(
             orderType: orderType.name,
             paymentStatus: orderType == OrderType.takeaway ? "paid" : "pending",
-            paymentType:
+            paymentMethod:
                 orderType == OrderType.takeaway ? selectedPayment : "pending",
             tableName: orderType == OrderType.dinein ? selectedTable : null,
             deliveryAddress:
                 orderType == OrderType.delivery ? selectedArea : null,
+            deliveryFee: orderType == OrderType.delivery ? selectedAreaCost : 0,
           );
       ref.read(cartAsyncNotifierProvider.notifier).clearCart();
 
@@ -53,53 +60,78 @@ class MenuScreen extends ConsumerWidget {
       }
     }
 
-    Widget cartItemCard(it) {
+    Widget cartItemCard(CartItemModel it) {
       return Card(
+        color: clrWhite,
         elevation: 2,
-        margin: EdgeInsets.symmetric(vertical: 4.h, horizontal: 2.w),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-        child: ListTile(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        margin: EdgeInsets.symmetric(vertical: 4.h),
+        child: Padding(
+          padding: EdgeInsets.all(8.w),
+          child: Row(
             children: [
-              TxtWidget(
-                  txt: it.name, fontsize: 16.sp, fontWeight: FontWeight.w600),
-              TxtWidget(
-                  txt: '${it.price} SDG',
-                  fontsize: 16.sp,
-                  fontWeight: FontWeight.w500,
-                  color: clrGrey),
-            ],
-          ),
-          subtitle: Text('Option: ${it.selectedOption ?? '-'}'),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              it.quantity != 1
-                  ? IconButton(
-                      icon: const Icon(Icons.remove),
-                      onPressed: () {
-                        final newQty = it.quantity > 1 ? it.quantity - 1 : 1;
-                        ref
-                            .read(cartAsyncNotifierProvider.notifier)
-                            .updateQuantity(it.dbId!, newQty);
-                      },
-                    )
-                  : IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => ref
-                          .read(cartAsyncNotifierProvider.notifier)
-                          .removeItem(it.dbId!),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TxtWidget(
+                      txt: it.name,
+                      fontsize: isLargeScreen ? 12.sp : 14.sp,
+                      fontWeight: FontWeight.w600,
                     ),
-              TxtWidget(
-                  txt: '${it.quantity}', fontsize: 16.sp, color: clrMainAppClr),
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: () => ref
-                    .read(cartAsyncNotifierProvider.notifier)
-                    .updateQuantity(it.dbId!, it.quantity + 1),
+                    gapH4,
+                    TxtWidget(
+                      txt: 'Option: ${it.selectedOption ?? '-'}',
+                      fontsize: isLargeScreen ? 10.sp : 12.sp,
+                      fontWeight: FontWeight.w400,
+                      color: clrGrey,
+                    ),
+                  ],
+                ),
               ),
+              Column(
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      it.quantity != 1
+                          ? IconButton(
+                              icon: const Icon(Icons.remove),
+                              onPressed: () {
+                                final newQty = it.quantity > 1 ? it.quantity - 1 : 1;
+                                ref
+                                    .read(cartAsyncNotifierProvider.notifier)
+                                    .updateQuantity(it.id!, newQty);
+                              },
+                            )
+                          : IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => ref
+                                  .read(cartAsyncNotifierProvider.notifier)
+                                  .removeItem(it.id!),
+                            ),
+                      TxtWidget(
+                        txt: '${it.quantity}',
+                        fontsize: isLargeScreen ? 14.sp : 16.sp,
+                        color: clrMainAppClr,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () => ref
+                            .read(cartAsyncNotifierProvider.notifier)
+                            .updateQuantity(it.id!, it.quantity + 1),
+                      ),
+                    ],
+                  ),
+                  TxtWidget(
+                    txt: '${it.price} SDG',
+                    fontsize: isLargeScreen ? 12.sp : 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: clrGrey,
+                  ),
+                  gapH8
+                ],
+              )
             ],
           ),
         ),
@@ -107,23 +139,18 @@ class MenuScreen extends ConsumerWidget {
     }
 
     Widget conditionalSelector() {
-      if (orderType == OrderType.takeaway) {
-        return Card(
-          elevation: 2,
-          margin: EdgeInsets.symmetric(vertical: 6.h),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 10.h),
-            child: Center(child: PaymentMethodSelector()),
-          ),
-        );
-      } else if (orderType == OrderType.dinein) {
-        return TableSelector();
-      } else if (orderType == OrderType.delivery) {
-        return DeliveryAddressSelector();
+      switch (orderType) {
+        case OrderType.takeaway:
+          return Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+            child: const PaymentMethodSelector(),
+          );
+        case OrderType.dinein:
+          return const TableSelector();
+        case OrderType.delivery:
+          return const DeliveryAddressSelector();
       }
-      return const SizedBox.shrink();
     }
 
     return Scaffold(
@@ -135,7 +162,7 @@ class MenuScreen extends ConsumerWidget {
           children: [
             TxtWidget(
               txt: 'Menu',
-              fontsize: 24.sp,
+              fontsize: isLargeScreen ? 18.sp : 20.sp,
               fontWeight: FontWeight.w600,
               color: clrBlack,
             ),
@@ -146,36 +173,38 @@ class MenuScreen extends ConsumerWidget {
                 children: [
                   // --- Left Menu Column --- //
                   Flexible(
-                    flex: MediaQuery.sizeOf(context).width >= 1200 ? 8 : 7,
+                    flex: isLargeScreen ? 8 : 7,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         TxtWidget(
-                            txt: 'Categories',
-                            fontsize: 18.sp,
-                            fontWeight: FontWeight.w600),
+                          txt: 'Categories',
+                          fontsize: isLargeScreen ? 13.sp : 16.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                         gapH8,
                         const CategorySelector(),
                         Container(
-                          margin: EdgeInsets.symmetric(
-                              vertical: 5.h, horizontal: 5.w),
+                          margin: EdgeInsets.symmetric(vertical: 5.h, horizontal: 5.w),
                           height: 30.h,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               TxtWidget(
-                                  txt: 'Select Menu',
-                                  fontsize: 18.sp,
-                                  fontWeight: FontWeight.w600),
+                                txt: 'Select Menu',
+                                fontsize: isLargeScreen ? 13.sp : 16.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
                               TxtWidget(
-                                  txt: 'showing ${menuItems.length} items',
-                                  fontsize: 15.sp,
-                                  color: clrGrey,
-                                  fontWeight: FontWeight.w500),
+                                txt: 'showing ${menuItems.length} items',
+                                fontsize: isLargeScreen ? 12.sp : 14.sp,
+                                color: clrGrey,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ],
                           ),
                         ),
-                        Expanded(child: const ItemsList()),
+                        const Expanded(child: ItemsList()),
                       ],
                     ),
                   ),
@@ -187,156 +216,150 @@ class MenuScreen extends ConsumerWidget {
                     flex: 3,
                     child: cartState.when(
                       data: (items) {
-                        if (items.isEmpty) {
-                          return const Center(child: Text('Cart is empty'));
-                        }
+                        if (items.isEmpty) return const Center(child: Text('Cart is empty'));
 
-                        return SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // --- Cart Items --- //
-                              Card(
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12.r)),
-                                child: Padding(
-                                  padding: EdgeInsets.all(8.w),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      TxtWidget(
-                                          txt: 'Order Details:',
-                                          fontsize: 16.sp,
-                                          fontWeight: FontWeight.w600,
-                                          color: clrMainAppClr),
-                                      gapH8,
-                                      Column(
-                                        children:
-                                            items.map(cartItemCard).toList(),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              gapH8,
-
-                              // --- Order Type Selector --- //
-                              Card(
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12.r)),
-                                child: Padding(
-                                  padding: EdgeInsets.all(8.w),
-                                  child: OrderTypeSelector(),
-                                ),
-                              ),
-                              gapH8,
-
-                              conditionalSelector(),
-                              gapH8,
-
-                              // --- Totals Card --- //
-                              Card(
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12.r)),
-                                child: Padding(
-                                  padding: EdgeInsets.all(12.w),
-                                  child: Column(
-                                    children: [
-                                      TxtWidget(
-                                          txt: 'Order Cost',
-                                          fontsize: 16.sp,
-                                          fontWeight: FontWeight.w600),
-                                      gapH8,
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          TxtWidget(
-                                              txt: '$count item(s)',
-                                              fontsize: 15.sp,
-                                              fontWeight: FontWeight.w500),
-                                          TxtWidget(
-                                              txt: '$total SDG',
-                                              fontsize: 15.sp,
-                                              fontWeight: FontWeight.w600),
-                                        ],
-                                      ),
-                                      if (orderType == OrderType.delivery)
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            TxtWidget(
-                                                txt: 'Delivery',
-                                                fontsize: 15.sp,
-                                                fontWeight: FontWeight.w500),
-                                            TxtWidget(
-                                                txt: '0 SDG',
-                                                fontsize: 15.sp,
-                                                fontWeight: FontWeight.w600),
-                                          ],
-                                        ),
-                                      const Divider(),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          TxtWidget(
-                                              txt: 'Total Cost',
-                                              fontsize: 15.sp,
-                                              fontWeight: FontWeight.w500),
-                                          TxtWidget(
-                                              txt: '$total SDG',
-                                              fontsize: 15.sp,
-                                              fontWeight: FontWeight.w600),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              gapH12,
-
-                              // --- Action Buttons --- //
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                        return Column(
+                          children: [
+                            // --- Scrollable Cart --- //
+                            Expanded(
+                              child: ListView(
+                                padding: EdgeInsets.zero,
                                 children: [
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        minimumSize: Size(140.h, 60.h),
-                                        backgroundColor: clrRed,foregroundColor: clrWhite),
-                                    onPressed: () => ref
-                                        .read(
-                                            cartAsyncNotifierProvider.notifier)
-                                        .clearCart(),
-                                    child: const Text('Clear Cart'),
+                                  Card(
+                                    elevation: 2,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12.r)),
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8.w),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          TxtWidget(
+                                            txt: 'Order Details:',
+                                            fontsize: isLargeScreen ? 14.sp : 15.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: clrMainAppClr,
+                                          ),
+                                          gapH8,
+                                          ...items.map(cartItemCard),
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                  gapW8,
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        minimumSize: Size(140.h, 60.h),
-                                        backgroundColor: clrGreen,foregroundColor: clrWhite),
-                                    onPressed: (selectedPayment == null &&
-                                            orderType == OrderType.takeaway)
-                                        ? null
-                                        : placeOrder,
-                                    child: const Text('Complete Order'),
+                                  gapH8,
+                                  Card(
+                                    elevation: 2,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12.r)),
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8.w),
+                                      child: const OrderTypeSelector(),
+                                    ),
+                                  ),
+                                  gapH8,
+                                  conditionalSelector(),
+                                ],
+                              ),
+                            ),
+
+                            // --- Sticky Totals & Buttons --- //
+                            Container(
+                              decoration: BoxDecoration(
+                                color: clrWhite,
+                                borderRadius: BorderRadius.circular(12.r),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 4,
+                                    offset: const Offset(0, -2),
+                                  )
+                                ],
+                              ),
+                              padding: EdgeInsets.all(8.w),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      TxtWidget(txt: '$count item(s)'),
+                                      TxtWidget(txt: '$total SDG'),
+                                    ],
+                                  ),
+                                  if (orderType == OrderType.delivery)
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const TxtWidget(txt: 'Delivery'),
+                                        TxtWidget(
+                                          txt: selectedAreaCost == null
+                                              ? '----'
+                                              : '$selectedAreaCost SDG',
+                                        ),
+                                      ],
+                                    ),
+                                  const Divider(),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const TxtWidget(txt: 'Total Cost'),
+                                      TxtWidget(
+                                        txt: '${total + (selectedAreaCost ?? 0)} SDG',
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ],
+                                  ),
+                                  gapH12,
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          minimumSize: Size(135.h, 60.h),
+                                          backgroundColor: clrRed,
+                                        ),
+                                        onPressed: () => ref
+                                            .read(cartAsyncNotifierProvider.notifier)
+                                            .clearCart(),
+                                        child: const TxtWidget(txt: 'Clear Cart', color: clrWhite),
+                                      ),
+                                      gapW8,
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          minimumSize: Size(135.h, 60.h),
+                                          backgroundColor: clrGreen,
+                                        ),
+                                        onPressed: ((selectedPayment == null &&
+                                                    orderType == OrderType.takeaway) ||
+                                                (orderType == OrderType.dinein &&
+                                                    selectedTable == null) ||
+                                                (orderType == OrderType.delivery &&
+                                                    selectedArea == null))
+                                            ? null
+                                            : placeOrder,
+                                        child: TxtWidget(
+                                          txt: (selectedPayment == null &&
+                                                  orderType == OrderType.takeaway)
+                                              ? 'Select Payment'
+                                              : (orderType == OrderType.dinein &&
+                                                      selectedTable == null)
+                                                  ? 'Select Table'
+                                                  : (orderType == OrderType.delivery &&
+                                                          selectedArea == null)
+                                                      ? 'Select Address'
+                                                      : 'Complete Order',
+                                          color: clrWhite,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              gapH12,
-                            ],
-                          ),
+                            ),
+                          ],
                         );
                       },
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (e, st) =>
-                          Center(child: Text('Error loading cart: $e')),
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (e, st) => Center(child: Text('Error loading cart: $e')),
                     ),
                   ),
                 ],

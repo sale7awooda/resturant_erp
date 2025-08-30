@@ -22,14 +22,13 @@ final menuProvider = Provider<List<MenuItemModel>>((ref) {
         options: ['Cheese', 'Pepperoni', 'Veggie']),
     MenuItemModel(
         id: '3',
-        name: 'Coffee2',
+        name: 'coca-cola',
         categ: Category.drink.name,
         price: 3.0,
-        img: 'assets/images/img.png',
-        options: ['Hot', 'Iced']),
+        img: 'assets/images/img.png'),
     MenuItemModel(
         id: '4',
-        name: 'Burger',
+        name: 'Kids Burger',
         categ: Category.sandwich.name, // Example category
         price: 5.0,
         img: 'assets/images/img.png',
@@ -60,8 +59,7 @@ final menuProvider = Provider<List<MenuItemModel>>((ref) {
         name: 'water',
         categ: Category.drink.name, // Example category
         price: 2.0,
-        img: 'assets/images/img.png',
-        options: ['Small', 'Medium', 'Large']),
+        img: 'assets/images/img.png'),
     MenuItemModel(
         id: '9',
         name: 'fruit salad',
@@ -81,8 +79,7 @@ final menuProvider = Provider<List<MenuItemModel>>((ref) {
         name: 'fried chicken',
         categ: Category.grill.name, // Example category
         price: 18.0,
-        img: 'assets/images/img.png',
-        options: ['Small', 'Medium', 'Large']),
+        img: 'assets/images/img.png'),
     MenuItemModel(
         id: '12',
         name: 'fried fish',
@@ -96,7 +93,8 @@ final menuProvider = Provider<List<MenuItemModel>>((ref) {
 // Map<itemId, selectedOption>
 final selectedOptionsProvider =
     StateProvider<Map<String, String?>>((ref) => {});
-final itemQuantityProvider = StateProvider.family<int, String>((ref, itemId) => 1);
+final itemQuantityProvider =
+    StateProvider.family<int, String>((ref, itemId) => 1);
 
 // Filtered items provider (example: just return all, or you can map categories to filters)
 final filteredMenuProvider = Provider<List<MenuItemModel>>((ref) {

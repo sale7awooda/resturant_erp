@@ -36,8 +36,7 @@ class OrderTypeSelector extends ConsumerWidget {
               color: clrMainAppClr,
             ),Icon(Icons.menu_rounded, color: clrMainAppClr, size: 28.sp)
           ],
-        ),
-        SizedBox(height: 10.h),
+        ),gapH8,
         Center(
           child: Wrap(
             spacing: 7.w,
@@ -80,8 +79,8 @@ class OrderTypeSelector extends ConsumerWidget {
                         txt: type.name.toUpperCase(),
                         color: isSelected ? clrWhite : clrBlack,
                         fontsize: MediaQuery.sizeOf(context).width >= 1200
-                            ? 11.sp
-                            : 13.sp,
+                            ? 10.sp
+                            : 12.sp,
                         fontWeight: FontWeight.w500,
                       ),
                     ],

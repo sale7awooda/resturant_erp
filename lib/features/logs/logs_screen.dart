@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:starter_template/common/widgets/txt_widget.dart';
 import 'package:starter_template/core/constants.dart';
+import 'package:starter_template/features/logs/log_model.dart';
 import 'package:starter_template/features/logs/logs_provider.dart';
 
 class LogsScreen extends ConsumerStatefulWidget {
@@ -15,22 +16,36 @@ class LogsScreen extends ConsumerStatefulWidget {
 }
 
 class _LogsScreenState extends ConsumerState<LogsScreen> {
-  DateTime? _selectedDate;
+  DateTime? _selectedStartDate;
+  DateTime? _selectedEndDate;
 
-  Future<void> _pickDate(BuildContext context) async {
+  Future<void> _pickDateRange(BuildContext context) async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? now,
+    final pickedStart = await showDatePicker(
+      context: context,helpText: 'pick starting date',
+      initialDate: _selectedStartDate ?? now,
       firstDate: DateTime(now.year - 5),
-      lastDate: DateTime(now.year + 1),
+      lastDate: now,
     );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-      ref.read(logsProvider.notifier).loadLogs(
-            date: DateFormat('yyyy-MM-dd').format(picked),
-          );
-    }
+    if (pickedStart == null) return;
+
+    final pickedEnd = await showDatePicker(
+      context: context,
+      initialDate: _selectedEndDate ?? pickedStart,
+      firstDate: pickedStart,
+      lastDate: now,
+    );
+    if (pickedEnd == null) return;
+
+    setState(() {
+      _selectedStartDate = pickedStart;
+      _selectedEndDate = pickedEnd;
+    });
+
+    ref.read(logsProvider.notifier).loadLogs(
+          startDate: pickedStart,
+          endDate: pickedEnd,
+        );
   }
 
   @override
@@ -42,167 +57,132 @@ class _LogsScreenState extends ConsumerState<LogsScreen> {
         centerTitle: true,
         title: const Text('System Logs'),
         actions: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 15.h, vertical: 5.h),
-            child: IconButton(
-              icon: const Icon(Icons.calendar_today),
-              onPressed: () => _pickDate(context),
-            ),
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () => _pickDateRange(context),
           ),
         ],
       ),
       body: logsState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (logs) {
-          if (logs.isEmpty) {
-            return Center(
-              child: TxtWidget(
-                txt: 'No logs available.',
-                fontWeight: FontWeight.w500,
-                fontsize: 20.sp,
-              ),
-            );
-          }
-
-          final columns = <PlutoColumn>[
-            PlutoColumn(
-                title: 'ID',
-                field: 'id',
-                type: PlutoColumnType.number(),
-                width: 60.w,
-                minWidth: 60.w,
-                readOnly: true,
-                enableHideColumnMenuItem: false,
-                textAlign: PlutoColumnTextAlign.center,
-                titleTextAlign: PlutoColumnTextAlign.center,
-                enableColumnDrag: false,
-                enableContextMenu: false,
-                enableRowDrag: false),
-            PlutoColumn(
-                title: 'Action',
-                field: 'action',
-                type: PlutoColumnType.text(),
-                width: 130.w,
-                minWidth: 130.w,
-                readOnly: true,
-                enableHideColumnMenuItem: false,
-                textAlign: PlutoColumnTextAlign.center,
-                titleTextAlign: PlutoColumnTextAlign.center,
-                enableColumnDrag: false,
-                enableContextMenu: false,
-                enableRowDrag: false),
-            PlutoColumn(
-                title: 'Entity',
-                field: 'entity',
-                type: PlutoColumnType.text(),
-                width: 90.w,
-                minWidth: 90.w,
-                readOnly: true,
-                enableHideColumnMenuItem: false,
-                textAlign: PlutoColumnTextAlign.center,
-                titleTextAlign: PlutoColumnTextAlign.center,
-                enableColumnDrag: false,
-                enableContextMenu: false,
-                enableRowDrag: false),
-            // PlutoColumn(
-            //     title: 'Entity ID',
-            //     field: 'entityId',
-            //     type: PlutoColumnType.text(),
-            //     width: 100.w),
-            PlutoColumn(
-                title: 'Details',
-                field: 'details',
-                type: PlutoColumnType.text(),
-                width: 350.w,
-                minWidth: 350.w,
-                readOnly: true,
-                enableHideColumnMenuItem: false,
-                textAlign: PlutoColumnTextAlign.center,
-                titleTextAlign: PlutoColumnTextAlign.center,
-                enableColumnDrag: false,
-                enableContextMenu: false,
-                enableRowDrag: false),
-            PlutoColumn(
-                title: 'User ID',
-                field: 'userId',
-                type: PlutoColumnType.text(),
-                width: 100.w,
-                minWidth: 100.w,
-                readOnly: true,
-                enableHideColumnMenuItem: false,
-                textAlign: PlutoColumnTextAlign.center,
-                titleTextAlign: PlutoColumnTextAlign.center,
-                enableColumnDrag: false,
-                enableContextMenu: false,
-                enableRowDrag: false),
-            PlutoColumn(
-                title: 'Date',
-                field: 'date',
-                type: PlutoColumnType.text(),
-                width: 170.w,
-                minWidth: 170.w,
-                readOnly: true,
-                enableHideColumnMenuItem: false,
-                textAlign: PlutoColumnTextAlign.center,
-                titleTextAlign: PlutoColumnTextAlign.center,
-                enableColumnDrag: false,
-                enableContextMenu: false,
-                enableRowDrag: false),
-          ];
-
-          final rows = logs.map((log) {
-            return PlutoRow(cells: {
-              'id': PlutoCell(value: log.id ?? 0),
-              'action': PlutoCell(value: log.action),
-              'entity': PlutoCell(value: log.entity),
-              // 'entityId': PlutoCell(value: log.entityId ?? '-'),
-              'userId': PlutoCell(value: log.userId),
-              'details': PlutoCell(value: log.details),
-              'date': PlutoCell(
-                value: DateFormat('yyyy/MM/dd HH:mm').format(log.timestamp),
-              ),
-            });
-          }).toList();
-
-          return Column(
-            children: [
-              Expanded(
-                child: PlutoGrid(
-                  columns: columns,
-                  rows: rows,
-                  configuration: PlutoGridConfiguration(
-                    style: PlutoGridStyleConfig(
-                      rowColor: Colors.white,
-                      oddRowColor: Colors.blue.shade50,
-                      activatedColor: clrMainAppClrLight,
-                      gridBorderColor: Colors.grey.shade200,
-                      gridBorderRadius: BorderRadius.circular(12.r),
-                      rowHeight: 40.h,
-                      columnHeight: 55.h,
-                    ),
-                  ),
+        data: (logs) => logs.isEmpty
+            ? Center(
+                child: TxtWidget(
+                  txt: 'No logs available.',
+                  fontWeight: FontWeight.w500,
+                  fontsize: 20.sp,
                 ),
-              ),
-              _LogsSummaryFooter(totalLogs: logs.length, logs: logs),
-            ],
-          );
-        },
+              )
+            : _buildLogsGrid(logs),
       ),
+    );
+  }
+
+  Widget _buildLogsGrid(List<LogModel> logs) {
+    final columns = <PlutoColumn>[
+      PlutoColumn(
+        title: 'ID',
+        field: 'id',
+        type: PlutoColumnType.number(),
+        width: 60.w,
+        readOnly: true,
+        textAlign: PlutoColumnTextAlign.center,
+        titleTextAlign: PlutoColumnTextAlign.center,
+      ),
+      PlutoColumn(
+        title: 'Action',
+        field: 'action',
+        type: PlutoColumnType.text(),
+        width: 130.w,
+        readOnly: true,
+        textAlign: PlutoColumnTextAlign.center,
+        titleTextAlign: PlutoColumnTextAlign.center,
+      ),
+      PlutoColumn(
+        title: 'Entity',
+        field: 'entity',
+        type: PlutoColumnType.text(),
+        width: 90.w,
+        readOnly: true,
+        textAlign: PlutoColumnTextAlign.center,
+        titleTextAlign: PlutoColumnTextAlign.center,
+      ),
+      PlutoColumn(
+        title: 'Details',
+        field: 'details',
+        type: PlutoColumnType.text(),
+        width: 350.w,
+        readOnly: true,
+        textAlign: PlutoColumnTextAlign.center,
+        titleTextAlign: PlutoColumnTextAlign.center,
+      ),
+      PlutoColumn(
+        title: 'User ID',
+        field: 'userId',
+        type: PlutoColumnType.text(),
+        width: 100.w,
+        readOnly: true,
+        textAlign: PlutoColumnTextAlign.center,
+        titleTextAlign: PlutoColumnTextAlign.center,
+      ),
+      PlutoColumn(
+        title: 'Date',
+        field: 'date',
+        type: PlutoColumnType.text(),
+        width: 170.w,
+        readOnly: true,
+        textAlign: PlutoColumnTextAlign.center,
+        titleTextAlign: PlutoColumnTextAlign.center,
+      ),
+    ];
+
+    final rows = logs.map((log) {
+      return PlutoRow(cells: {
+        'id': PlutoCell(value: log.id ?? 0),
+        'action': PlutoCell(value: log.action),
+        'entity': PlutoCell(value: log.entity),
+        'details': PlutoCell(value: log.details),
+        'userId': PlutoCell(value: log.userId),
+        'date': PlutoCell(
+            value: DateFormat('yyyy/MM/dd HH:mm').format(log.timestamp)),
+      });
+    }).toList();
+
+    return Column(
+      children: [
+        Expanded(
+          child: PlutoGrid(
+            columns: columns,
+            rows: rows,
+            configuration: PlutoGridConfiguration(
+              style: PlutoGridStyleConfig(
+                rowColor: Colors.white,
+                oddRowColor: Colors.blue.shade50,
+                activatedColor: clrMainAppClrLight,
+                gridBorderColor: Colors.grey.shade200,
+                gridBorderRadius: BorderRadius.circular(12.r),
+                rowHeight: 40.h,
+                columnHeight: 55.h,
+              ),
+            ),
+          ),
+        ),
+        _LogsSummaryFooter(totalLogs: logs.length, logs: logs),
+      ],
     );
   }
 }
 
 class _LogsSummaryFooter extends StatelessWidget {
   final int totalLogs;
-  final List<dynamic> logs;
+  final List<LogModel> logs;
 
   const _LogsSummaryFooter({required this.totalLogs, required this.logs});
 
   @override
   Widget build(BuildContext context) {
-    // Group logs by action type for summary
-    final Map<String, int> actionCounts = {};
+    final actionCounts = <String, int>{};
     for (var log in logs) {
       actionCounts[log.action] = (actionCounts[log.action] ?? 0) + 1;
     }
@@ -223,11 +203,11 @@ class _LogsSummaryFooter extends StatelessWidget {
             gapW16,
             Wrap(
               spacing: 25.w,
-              children: actionCounts.entries.map((e) {
-                return TxtWidget(
-                    txt: "${e.key}: ${e.value}", fontWeight: FontWeight.w500);
-              }).toList(),
-            )
+              children: actionCounts.entries
+                  .map((e) => TxtWidget(
+                      txt: "${e.key}: ${e.value}", fontWeight: FontWeight.w500))
+                  .toList(),
+            ),
           ],
         ),
       ),
