@@ -13,10 +13,9 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ordersAsync = ref.watch(ordersAsyncProvider);
+    final ordersAsync = ref.watch(allOrdersProvider);
 
     return Scaffold(
-      // appBar: AppBar(title: const Text("Dashboard")),
       body: ordersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text("Error: $err")),
@@ -29,7 +28,7 @@ class DashboardScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, List<OrderModel> orders) {
     final now = DateTime.now();
 
-    // --- Filtered Orders ---
+    // --- Filtered ---
     final todayOrders =
         orders.where((o) => _isSameDay(o.createdAt, now)).toList();
     final weekOrders = orders
@@ -56,144 +55,183 @@ class DashboardScreen extends ConsumerWidget {
     double revenueToday = todayOrders.fold(0, (s, o) => s + o.totalAmount);
     double revenueWeek = weekOrders.fold(0, (s, o) => s + o.totalAmount);
     double revenueMonth = monthOrders.fold(0, (s, o) => s + o.totalAmount);
+    // double revenueTotal = orders.fold(0, (s, o) => s + o.totalAmount);
 
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 5.2),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TxtWidget(
-            txt: "Dashboard",
-            fontsize: 18.sp,
-            fontWeight: FontWeight.w600,
-          ),
+              txt: "Dashboard",
+              fontsize:
+                  MediaQuery.sizeOf(context).width >= 1200 ? 16.sp : 18.sp,
+              fontWeight: FontWeight.w700),
+          gapH4,
+          TxtWidget(
+              txt: "📊 Summary",
+              fontsize:
+                  MediaQuery.sizeOf(context).width >= 1200 ? 14.sp : 16.sp,
+              fontWeight: FontWeight.w600,
+              color: clrMainAppClr),
+          gapH4,
+
           // --- Summary Cards ---
           Center(
-            child: Wrap(
-              spacing: 5.w,
-              runSpacing: 1.h,
-              children: [
-                _summaryCard("Today's Orders", todayOrders.length.toString(),
-                    Icons.today, clrMainAppClr, context),
-                _summaryCard("This Week", weekOrders.length.toString(),
-                    Icons.calendar_view_week, clrOrange, context),
-                _summaryCard("This Month", monthOrders.length.toString(),
-                    Icons.calendar_month, clrGrey, context),
-                _summaryCard(
-                    "Revenue Today",
-                    "${revenueToday.toStringAsFixed(0)} SDG",
-                    Icons.attach_money,
-                    clrGreen,
-                    context),
-                _summaryCard(
-                    "Revenue Week",
-                    "${revenueWeek.toStringAsFixed(0)} SDG",
-                    Icons.trending_up,
-                    Colors.blue,
-                    context),
-                _summaryCard(
-                    "Revenue Month",
-                    "${revenueMonth.toStringAsFixed(0)} SDG",
-                    Icons.stacked_bar_chart,
-                    clrpurble,
-                    context),
-                _summaryCard(
-                  "Pending Payments",
-                  (dineinPending.length + deliveryPending.length).toString(),
-                  Icons.pending_actions,
-                  clrRed,
-                  context,
-                ),
-              ],
-            ),
+              child: Wrap(spacing: 6.w, runSpacing: 8.h, children: [
+            _summaryCard("Today's Orders", todayOrders.length.toString(),
+                Icons.today, clrMainAppClr, context),
+            _summaryCard("This Week", weekOrders.length.toString(),
+                Icons.calendar_view_week, clrOrange, context),
+            _summaryCard("This Month", monthOrders.length.toString(),
+                Icons.calendar_month, clrGrey, context),
+            _summaryCard(
+                "Revenue Today",
+                "${revenueToday.toStringAsFixed(0)} SDG",
+                Icons.attach_money,
+                clrGreen,
+                context),
+            _summaryCard(
+                "Revenue Week",
+                "${revenueWeek.toStringAsFixed(0)} SDG",
+                Icons.trending_up,
+                Colors.blue,
+                context),
+            _summaryCard(
+                "Revenue Month",
+                "${revenueMonth.toStringAsFixed(0)} SDG",
+                Icons.stacked_bar_chart,
+                clrpurble,
+                context),
+            // _summaryCard(
+            //     "Total Revenue",
+            //     "${revenueTotal.toStringAsFixed(0)} SDG",
+            //     Icons.savings,
+            //     Colors.teal,
+            //     context,
+            //     highlight: true),
+            _summaryCard(
+                "Pending Payments",
+                (dineinPending.length + deliveryPending.length).toString(),
+                Icons.pending_actions,
+                clrRed,
+                context)
+          ])),
+          gapH4,
+          TxtWidget(
+            txt: "⚠ Pending Payments",
+            fontsize: MediaQuery.sizeOf(context).width >= 1200 ? 14.sp : 16.sp,
+            fontWeight: FontWeight.w600,
+            color: clrRed,
           ),
           gapH4,
 
-          // --- Pending Orders Sections ---
-          _ordersSection(context, "Pending Dine-In Payments", Icons.restaurant,
-              dineinPending, ref),
+          _ordersSection(
+              context, "Dine-In", Icons.restaurant, dineinPending, ref),
           gapH4,
-          _ordersSection(context, "Pending Delivery Payments",
-              Icons.delivery_dining, deliveryPending, ref),
+          _ordersSection(
+              context, "Delivery", Icons.delivery_dining, deliveryPending, ref),
         ],
       ),
     );
   }
 
   // ✅ Summary Card
-  Widget _summaryCard(String title, String value, IconData icon, Color color,
-      BuildContext ctx) {
+  Widget _summaryCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+    BuildContext ctx,
+    // {bool highlight = false}
+  ) {
     return SizedBox(
-        width: 130.w,
-        height: MediaQuery.sizeOf(ctx).width >= 1200 ? 100.h : 90.h,
-        child: Card(
-            elevation: 3,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r)),
-            child: Padding(
-                padding: EdgeInsets.all(2.h),
-                child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(icon, color: color, size: 25.sp),
-                      TxtWidget(
-                        txt: value,
-                        fontsize: MediaQuery.sizeOf(ctx).width >= 1200
-                            ? 15.sp
-                            : 18.sp,
-                        fontWeight: FontWeight.bold,
-                        color: color,
-                      ),
-                      TxtWidget(
-                          txt: title,
-                          fontsize: MediaQuery.sizeOf(ctx).width >= 1200
-                              ? 12.sp
-                              : 12.sp,
-                          fontWeight: FontWeight.w600,
-                          color: clrLightBlack)
-                    ]))));
+      width: 130.w,
+      height: MediaQuery.sizeOf(ctx).width >= 1200 ? 100.h : 95.h,
+      child: Card(
+        elevation: 5, //highlight ? 5 : 2,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
+        child: Padding(
+          padding: EdgeInsets.all(5.h),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: color, size: 25.sp),
+              TxtWidget(
+                txt: value,
+                fontsize: MediaQuery.sizeOf(ctx).width >= 1200 ? 14.sp : 16.sp,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+              TxtWidget(
+                txt: title,
+                fontsize: MediaQuery.sizeOf(ctx).width >= 1200 ? 11.sp : 12.sp,
+                fontWeight: FontWeight.w600,
+                color: clrLightBlack,
+              )
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
-  // ✅ Orders Section
-  Widget _ordersSection(BuildContext context, String title, IconData icon,
-      List<OrderModel> orders, WidgetRef ref) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
-      child: Padding(
-        padding: EdgeInsets.all(5.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  // ✅ Orders Section (only shows when there are orders, otherwise collapsed with a message)
+  Widget _ordersSection(
+    BuildContext context,
+    String title,
+    IconData icon,
+    List<OrderModel> orders,
+    WidgetRef ref,
+  ) {
+    if (orders.isEmpty) {
+      // 🔹 Return a collapsed info row instead of ExpansionTile
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 8.w),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Title with icon
-            Row(
-              children: [
-                TxtWidget(
-                    txt: title,
-                    fontsize: MediaQuery.sizeOf(context).width >= 1200
-                        ? 14.sp
-                        : 14.sp,
-                    fontWeight: FontWeight.w600),
-                Spacer(),
-                Icon(icon, color: clrMainAppClr, size: 30.sp),
-                gapW16
-              ],
+            Icon(Icons.check_circle, color: Colors.green, size: 20.sp),
+            gapW8,
+            TxtWidget(
+              txt: "No pending $title orders 🎉",
+              fontsize: 13.sp,
+              fontWeight: FontWeight.w500,
+              color: Colors.green,
             ),
-            gapH4,
-            SizedBox(
-                height:
-                    MediaQuery.sizeOf(context).width >= 1200 ? 130.h : 120.h,
-                child: orders.isEmpty
-                    ? const Center(child: Text("No pending payments 🎉"))
-                    : ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: orders.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 10),
-                        itemBuilder: (context, index) =>
-                            _orderCard(context, orders[index], ref))),
           ],
         ),
+      );
+    }
+
+    // 🔹 If there ARE pending orders, show the ExpansionTile
+    return Card(
+      child: ExpansionTile(
+        initiallyExpanded: true, // expand automatically since there are items
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
+        tilePadding: EdgeInsets.symmetric(horizontal: 10.w),
+        childrenPadding: EdgeInsets.all(8.w),
+        leading: Icon(icon, color: clrMainAppClr, size: 26.sp),
+        title: TxtWidget(
+          txt: title,
+          fontsize: 14.sp,
+          fontWeight: FontWeight.w600,
+        ),
+        children: [
+          SizedBox(
+            height: 130.h,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: orders.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (context, index) =>
+                  _orderCard(context, orders[index], ref),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -214,7 +252,7 @@ class DashboardScreen extends ConsumerWidget {
       },
       child: Container(
         width: 170.w,
-        padding: EdgeInsets.symmetric(horizontal: 5.h),
+        padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 5.h),
         decoration: BoxDecoration(
           color: clrWhite,
           borderRadius: BorderRadius.circular(12.r),
@@ -227,78 +265,60 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TxtWidget(
-                txt: "Order# ${order.specialOrderId}",
-                fontsize:
-                    MediaQuery.sizeOf(context).width >= 1200 ? 13.sp : 15.sp,
-                fontWeight: FontWeight.w600),
-            // gapH4,
-            Center(
-                child:
-                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              txt: "Order# ${order.specialOrderId}",
+              fontsize: 15.sp,
+              fontWeight: FontWeight.w600,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 Icon(
-                    order.orderType == "dinein"
-                        ? Icons.table_restaurant_rounded
-                        : Icons.location_pin,
-                    size: 15.sp,
-                    color: clrMainAppClr),
+                  order.orderType == "dinein"
+                      ? Icons.table_restaurant_rounded
+                      : Icons.location_pin,
+                  size: 16.sp,
+                  color: clrMainAppClr,
+                ),
                 gapW4,
-                TxtWidget(
+                Flexible(
+                  child: TxtWidget(
                     txt: order.orderType == "dinein"
                         ? "${order.tableName}"
                         : "${order.deliveryAddress}",
-                    fontsize: MediaQuery.sizeOf(context).width >= 1200
-                        ? 12.sp
-                        : 14.sp,
+                    fontsize: 13.sp,
                     fontWeight: FontWeight.w600,
-                    color: clrMainAppClr)
-              ]),
-              // gapW4,
-              // Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              //   order.orderType == OrderType.delivery.name
-              //       ? Icon(Icons.delivery_dining_rounded, color: clrMainAppClr)
-              //       : SizedBox.shrink(),
-              //   gapW4,
-              //   order.orderType == OrderType.delivery.name
-              //       ? TxtWidget(
-              //           txt: "${order.deliveryFee}",
-              //           fontsize: 15.sp,
-              //           fontWeight: FontWeight.w600,
-              //           color: clrMainAppClr,
-              //         )
-              //       : SizedBox.shrink()
-              // ])
-            ])),
-            Center(
-              child: TxtWidget(
-                  txt: "${order.totalItems} items",
-                  fontsize:
-                      MediaQuery.sizeOf(context).width >= 1200 ? 13.sp : 14.sp,
-                  color: clrLightBlack),
+                    color: clrMainAppClr,
+                  ),
+                )
+              ],
+            ),
+            TxtWidget(
+              txt: "${order.totalItems} items",
+              fontsize: 13.sp,
+              color: clrLightBlack,
             ),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               TxtWidget(
                   txt: "SDG ${order.totalAmount.toStringAsFixed(0)}",
-                  fontsize:
-                      MediaQuery.sizeOf(context).width >= 1200 ? 12.sp : 14.sp,
-                  fontWeight: FontWeight.w700,
-                  color: clrMainAppClr),
-              TxtWidget(
-                  txt: "+${order.deliveryFee}",
-                  fontsize:
-                      MediaQuery.sizeOf(context).width >= 1200 ? 12.sp : 14.sp,
-                  fontWeight: FontWeight.w700,
-                  color: clrLightBlack)
+                  fontsize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                  color: clrGreen),
+              gapW4,
+              (order.deliveryFee != null && order.deliveryFee! > 0)
+                  ? TxtWidget(
+                      txt: "(+${order.deliveryFee})",
+                      fontsize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                      color: clrLightBlack)
+                  : SizedBox.shrink()
             ]),
-            // gapH4,
-            Center(
-                child: Text(
-                    DateFormat("dd MMM, hh:mm a").format(order.createdAt),
-                    style: const TextStyle(fontSize: 12, color: clrLightBlack)))
+            Text(
+              DateFormat("dd MMM, hh:mm a").format(order.createdAt),
+              style: const TextStyle(fontSize: 12, color: clrLightBlack),
+            ),
           ],
         ),
       ),

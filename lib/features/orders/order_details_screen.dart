@@ -15,7 +15,6 @@ import 'package:starter_template/features/orders/orders_provider.dart';
 
 class OrderDetailsScreen extends ConsumerStatefulWidget {
   final String specialOrderId;
-
   const OrderDetailsScreen({super.key, required this.specialOrderId});
 
   @override
@@ -24,6 +23,8 @@ class OrderDetailsScreen extends ConsumerStatefulWidget {
 
 class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
   OrderModel? order;
+  bool _loading = true;
+  bool _error = false;
 
   @override
   void initState() {
@@ -31,42 +32,52 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     _loadOrder();
   }
 
+  /// Load the order from provider and prefill cart
   Future<void> _loadOrder() async {
+    setState(() {
+      _loading = true;
+      _error = false;
+    });
+
     try {
-      final orders = await ref.read(ordersAsyncProvider.future);
+      final orders = await ref.read(allOrdersProvider.future);
       final found = orders.firstWhere(
         (o) => o.specialOrderId == widget.specialOrderId,
         orElse: () => throw Exception("Order not found"),
       );
 
-      setState(() => order = found);
-
-      // Prefill cart with conversion from OrderItemModel → CartItemModel
+      // Prefill cart
       final cart = ref.read(prefilledCartNotifierProvider.notifier);
       await cart.clearCart();
 
-      for (final it in order!.orderItems) {
-        final cartItem = CartItemModel(
-          itemId: it.menuItemId,
-          name: it.itemName,
-          price: it.price,
-          imageUrl: it.menuItemId,
-          // hasOption: it.hasOption,
-          selectedOption: it.selectedOption,
-          orderType: order!.orderType,
-          quantity: it.quantity,
-          source: 'prefilled',
-        );
-        await cart.addToCart(cartItem);
+      for (final it in found.orderItems) {
+        await cart.addToCart(CartItemModel.fromOrderItem(it, found.orderType
+            // , source: 'prefilled'
+            ));
+      }
+
+      if (mounted) {
+        setState(() {
+          order = found;
+          _loading = false;
+        });
       }
     } catch (e) {
-      debugPrint("Error loading order: $e");
+      debugPrint("❌ Error loading order: $e");
+      if (mounted) {
+        setState(() {
+          _error = true;
+          _loading = false;
+        });
+      }
     }
   }
 
-  void _completeOrder() async {
+  /// Complete the order
+  Future<void> _completeOrder() async {
+    if (order == null) return;
     final selectedPayment = ref.read(paymentMethodProvider);
-    if (selectedPayment == null || order == null) return;
+    if (selectedPayment == null) return;
 
     await ref.read(ordersAsyncProvider.notifier).placeOrUpdateOrder(
           pendingOrder: order,
@@ -75,15 +86,22 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
           paymentMethod: selectedPayment,
         );
 
+    ref.invalidate(allOrdersProvider);
+
     if (mounted) Navigator.pop(context);
   }
 
-  void _cancelOrder() async {
+  /// Cancel the order
+  Future<void> _cancelOrder() async {
     if (order == null) return;
+
     await ref.read(ordersAsyncProvider.notifier).cancelOrder(order!.id!);
+    ref.invalidate(allOrdersProvider);
+
     if (mounted) Navigator.pop(context);
   }
 
+  /// Single cart item card
   Widget _cartItemCard(CartItemModel it) {
     final cart = ref.read(prefilledCartNotifierProvider.notifier);
     final disabled = order?.orderStatus == OrderStatus.completed.name ||
@@ -91,28 +109,19 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
 
     return Card(
       color: clrWhite,
+      margin: EdgeInsets.symmetric(vertical: 4.h, horizontal: 5.w),
+      elevation: 2,
       child: ListTile(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TxtWidget(
-                txt: it.name,
-                fontsize:
-                    MediaQuery.sizeOf(context).width >= 1200 ? 12.sp : 14.sp,
-                fontWeight: FontWeight.w600),
-            TxtWidget(
-                txt: it.price.toString(),
-                fontsize:
-                    MediaQuery.sizeOf(context).width >= 1200 ? 13.sp : 15.sp,
-                fontWeight: FontWeight.w500,
-                color: clrGrey),
-          ],
-        ),
-        subtitle: Text('Option: ${it.selectedOption ?? '-'}'),
+        title: Text(it.name,
+            style: TextStyle(
+                fontWeight: FontWeight.w600, fontSize: 14.sp, color: clrBlack)),
+        subtitle: (it.selectedOption != null && it.selectedOption!.isNotEmpty)
+            ? TxtWidget(txt: 'Option: ${it.selectedOption}', color: clrGrey)
+            : SizedBox.shrink( ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (it.quantity != 1)
+            if (it.quantity > 1)
               IconButton(
                 icon: const Icon(Icons.remove),
                 onPressed: disabled
@@ -125,7 +134,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                 onPressed: disabled ? null : () => cart.removeItem(it.id!),
               ),
             TxtWidget(
-                txt: '${it.quantity}', fontsize: 16.sp, color: clrMainAppClr),
+                txt: '${it.quantity}', fontsize: 15.sp, color: clrMainAppClr),
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: disabled
@@ -138,14 +147,40 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     );
   }
 
+  /// Reusable row for totals
+  Widget _buildRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          TxtWidget(txt: label, fontsize: 14.sp, fontWeight: FontWeight.w500),
+          TxtWidget(
+              txt: value,
+              fontsize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: clrMainAppClr),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cartItems = ref.watch(prefilledCartNotifierProvider).value ?? [];
     final total = ref.watch(prefilledCartTotalProvider);
     final count = ref.watch(prefilledCartCountProvider);
 
-    if (order == null) {
+    if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_error || order == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Order not found")),
+        body: const Center(
+            child: Text("⚠ This order could not be loaded.",
+                style: TextStyle(color: Colors.red))),
+      );
     }
 
     final isDisabled = order?.orderStatus == OrderStatus.completed.name ||
@@ -154,183 +189,129 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: TxtWidget(
-            txt: 'Order #${order!.specialOrderId}',
-            fontsize: 18.sp,
-            fontWeight: FontWeight.w600),
+          txt: 'Order #${order!.specialOrderId}',
+          fontsize: 18.sp,
+          fontWeight: FontWeight.w600,
+        ),
       ),
-      body: Card(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- Left Menu Column ---
-            Flexible(
-              flex: MediaQuery.sizeOf(context).width >= 1200 ? 8 : 7,
-              child: Container(
-                color: clrLightGrey.withValues(alpha: 0.5),
-                padding: EdgeInsets.all(2.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TxtWidget(
-                        txt: 'Categories',
-                        fontsize: MediaQuery.sizeOf(context).width>=1200?14.sp: 16.sp, 
-                        fontWeight: FontWeight.w600),
-                    const CategorySelector(),
-                    const SizedBox(height: 8),
-                    Expanded(child: ItemsList(order: order)),
-                  ],
-                ),
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left Menu
+          Flexible(
+            flex: MediaQuery.sizeOf(context).width >= 1200 ? 8 : 7,
+            child: Container(
+              color: clrLightGrey.withValues(alpha: 0.5),
+              padding: EdgeInsets.all(6.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TxtWidget(
+                    txt: 'Categories',
+                    fontsize: MediaQuery.sizeOf(context).width >= 1200
+                        ? 14.sp
+                        : 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  const CategorySelector(),
+                  gapH8,
+                  Expanded(child: ItemsList(order: order)),
+                ],
               ),
             ),
+          ),
 
-            const VerticalDivider(width: 3),
+          const VerticalDivider(width: 2),
 
-            // --- Right Cart Column ---
-            Flexible(
-              flex: 3,
-              child: Container(
-                padding: EdgeInsets.all(3.w),
-                child: cartItems.isEmpty
-                    ? const Center(child: Text('Cart is empty'))
-                    : SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // --- Cart Items ---
-                            Card(
-                              child: Column(
-                                children: cartItems.map(_cartItemCard).toList(),
-                              ),
+          // Right Cart
+          Flexible(
+            flex: 3,
+            child: Padding(
+              padding: EdgeInsets.all(6.w),
+              child: cartItems.isEmpty
+                  ? const Center(child: Text('🛒 Cart is empty'))
+                  : SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Card(
+                            child: Column(
+                                children:
+                                    cartItems.map(_cartItemCard).toList()),
+                          ),
+                          gapH8,
+                          Card(
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 8),
+                                const TxtWidget(
+                                    txt: 'Payment Method',
+                                    fontsize: 15,
+                                    fontWeight: FontWeight.w600),
+                                PaymentMethodSelector(order: order),
+                                gapH8,
+                              ],
                             ),
-                            const SizedBox(height: 8),
-
-                            // --- Payment Selector ---
-                            Card(
+                          ),
+                          gapH8,
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(10.0),
                               child: Column(
                                 children: [
-                                  SizedBox(height: 8),
-                                  const TxtWidget(
-                                      txt: 'Payment Method',
-                                      fontsize: 15,
-                                      fontWeight: FontWeight.w600),
-                                  PaymentMethodSelector(order: order),
-                                  gapH8,
+                                  _buildRow('$count item(s)',
+                                      '${total.toStringAsFixed(0)} SDG'),
+                                  if (order?.orderType ==
+                                      OrderType.delivery.name)
+                                    _buildRow('Delivery Fee',
+                                        '${order!.deliveryFee} SDG'),
+                                  const Divider(),
+                                  _buildRow(
+                                    'Total Cost',
+                                    '${(order!.totalAmount + (order!.deliveryFee ?? 0)).toStringAsFixed(0)} SDG',
+                                  ),
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 8),
-
-                            // --- Totals ---
-                            Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          TxtWidget(
-                                              txt: '$count item(s)',
-                                              fontsize: 15.sp,
-                                              fontWeight: FontWeight.w500),
-                                          TxtWidget(
-                                              txt: '$total SDG',
-                                              fontsize: 15.sp,
-                                              fontWeight: FontWeight.w600)
-                                        ]),
-                                    if (order?.orderType ==
-                                        OrderType.delivery.name)
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          TxtWidget(
-                                              txt: 'Delivery',
-                                              fontsize:
-                                                  MediaQuery.sizeOf(context)
-                                                              .width >=
-                                                          1200
-                                                      ? 12.sp
-                                                      : 14.sp,
-                                              fontWeight: FontWeight.w500),
-                                          TxtWidget(
-                                              txt:
-                                                  '${order!.totalAmount - total} SDG',
-                                              fontsize:
-                                                  MediaQuery.sizeOf(context)
-                                                              .width >=
-                                                          1200
-                                                      ? 12.sp
-                                                      : 14.sp,
-                                              fontWeight: FontWeight.w600),
-                                        ],
-                                      ),
-                                    const Divider(),
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          TxtWidget(
-                                              txt: 'Total Cost',
-                                              fontsize:
-                                                  MediaQuery.sizeOf(context)
-                                                              .width >=
-                                                          1200
-                                                      ? 12.sp
-                                                      : 14.sp,
-                                              fontWeight: FontWeight.w500),
-                                          TxtWidget(
-                                              txt: '${order?.totalAmount} SDG',
-                                              fontsize:
-                                                  MediaQuery.sizeOf(context)
-                                                              .width >=
-                                                          1200
-                                                      ? 12.sp
-                                                      : 14.sp,
-                                              fontWeight: FontWeight.w600)
-                                        ])
-                                  ],
+                          ),
+                          gapH12,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.all(15.h),
+                                  minimumSize: Size(130.h, 55.h),
+                                  backgroundColor:
+                                      isDisabled ? clrMainAppClr : clrRed,
+                                  foregroundColor: clrWhite,
                                 ),
+                                onPressed: isDisabled
+                                    ? () => Navigator.pop(context)
+                                    : _cancelOrder,
+                                child:
+                                    Text(isDisabled ? 'Back' : 'Cancel Order'),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-
-                            // --- Action Buttons ---
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    minimumSize: Size(135.h, 60.h),
-                                    backgroundColor: clrRed,
-                                    foregroundColor: clrWhite,
-                                  ),
-                                  onPressed: isDisabled
-                                      ? () => Navigator.pop(context)
-                                      : _cancelOrder,
-                                  child: Text(
-                                      isDisabled ? 'Back' : 'Cancel Order'),
+                              gapW4,
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.all(15.h),
+                                  minimumSize: Size(130.h, 55.h),
+                                  backgroundColor:
+                                      isDisabled ? clrGrey : clrGreen,
+                                  foregroundColor: clrWhite
                                 ),
-                                const SizedBox(width: 8),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    minimumSize: Size(135.h, 60.h),
-                                    backgroundColor: clrGreen,
-                                    foregroundColor: clrWhite,
-                                  ),
-                                  onPressed: isDisabled ? null : _completeOrder,
-                                  child: const Text('Complete Order'),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                                onPressed: isDisabled ? null : _completeOrder,
+                                child: const Text('Complete Order'),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-              ),
+                    ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

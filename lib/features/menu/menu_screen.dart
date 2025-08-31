@@ -64,10 +64,11 @@ class MenuScreen extends ConsumerWidget {
       return Card(
         color: clrWhite,
         elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
         margin: EdgeInsets.symmetric(vertical: 4.h),
         child: Padding(
-          padding: EdgeInsets.all(8.w),
+          padding: EdgeInsets.symmetric(horizontal: 5.w),
           child: Row(
             children: [
               Expanded(
@@ -80,12 +81,14 @@ class MenuScreen extends ConsumerWidget {
                       fontWeight: FontWeight.w600,
                     ),
                     gapH4,
-                    TxtWidget(
-                      txt: 'Option: ${it.selectedOption ?? '-'}',
-                      fontsize: isLargeScreen ? 10.sp : 12.sp,
-                      fontWeight: FontWeight.w400,
-                      color: clrGrey,
-                    ),
+                    (it.selectedOption != null && it.selectedOption!.isNotEmpty)
+                        ? TxtWidget(
+                            txt: 'Option: ${it.selectedOption}',
+                            fontsize: isLargeScreen ? 10.sp : 12.sp,
+                            fontWeight: FontWeight.w400,
+                            color: clrGrey,
+                          )
+                        : SizedBox.shrink(),
                   ],
                 ),
               ),
@@ -98,7 +101,8 @@ class MenuScreen extends ConsumerWidget {
                           ? IconButton(
                               icon: const Icon(Icons.remove),
                               onPressed: () {
-                                final newQty = it.quantity > 1 ? it.quantity - 1 : 1;
+                                final newQty =
+                                    it.quantity > 1 ? it.quantity - 1 : 1;
                                 ref
                                     .read(cartAsyncNotifierProvider.notifier)
                                     .updateQuantity(it.id!, newQty);
@@ -143,7 +147,8 @@ class MenuScreen extends ConsumerWidget {
         case OrderType.takeaway:
           return Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r)),
             child: const PaymentMethodSelector(),
           );
         case OrderType.dinein:
@@ -185,7 +190,8 @@ class MenuScreen extends ConsumerWidget {
                         gapH8,
                         const CategorySelector(),
                         Container(
-                          margin: EdgeInsets.symmetric(vertical: 5.h, horizontal: 5.w),
+                          margin: EdgeInsets.symmetric(
+                              vertical: 5.h, horizontal: 5.w),
                           height: 30.h,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -216,7 +222,9 @@ class MenuScreen extends ConsumerWidget {
                     flex: 3,
                     child: cartState.when(
                       data: (items) {
-                        if (items.isEmpty) return const Center(child: Text('Cart is empty'));
+                        if (items.isEmpty) {
+                          return const Center(child: Text('Cart is empty'));
+                        }
 
                         return Column(
                           children: [
@@ -228,15 +236,18 @@ class MenuScreen extends ConsumerWidget {
                                   Card(
                                     elevation: 2,
                                     shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12.r)),
+                                        borderRadius:
+                                            BorderRadius.circular(12.r)),
                                     child: Padding(
                                       padding: EdgeInsets.all(8.w),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           TxtWidget(
                                             txt: 'Order Details:',
-                                            fontsize: isLargeScreen ? 14.sp : 15.sp,
+                                            fontsize:
+                                                isLargeScreen ? 14.sp : 15.sp,
                                             fontWeight: FontWeight.w600,
                                             color: clrMainAppClr,
                                           ),
@@ -250,7 +261,8 @@ class MenuScreen extends ConsumerWidget {
                                   Card(
                                     elevation: 2,
                                     shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12.r)),
+                                        borderRadius:
+                                            BorderRadius.circular(12.r)),
                                     child: Padding(
                                       padding: EdgeInsets.all(8.w),
                                       child: const OrderTypeSelector(),
@@ -279,7 +291,8 @@ class MenuScreen extends ConsumerWidget {
                               child: Column(
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       TxtWidget(txt: '$count item(s)'),
                                       TxtWidget(txt: '$total SDG'),
@@ -287,7 +300,8 @@ class MenuScreen extends ConsumerWidget {
                                   ),
                                   if (orderType == OrderType.delivery)
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         const TxtWidget(txt: 'Delivery'),
                                         TxtWidget(
@@ -299,11 +313,13 @@ class MenuScreen extends ConsumerWidget {
                                     ),
                                   const Divider(),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       const TxtWidget(txt: 'Total Cost'),
                                       TxtWidget(
-                                        txt: '${total + (selectedAreaCost ?? 0)} SDG',
+                                        txt:
+                                            '${total + (selectedAreaCost ?? 0)} SDG',
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ],
@@ -318,9 +334,11 @@ class MenuScreen extends ConsumerWidget {
                                           backgroundColor: clrRed,
                                         ),
                                         onPressed: () => ref
-                                            .read(cartAsyncNotifierProvider.notifier)
+                                            .read(cartAsyncNotifierProvider
+                                                .notifier)
                                             .clearCart(),
-                                        child: const TxtWidget(txt: 'Clear Cart', color: clrWhite),
+                                        child: const TxtWidget(
+                                            txt: 'Clear Cart', color: clrWhite),
                                       ),
                                       gapW8,
                                       ElevatedButton(
@@ -329,21 +347,28 @@ class MenuScreen extends ConsumerWidget {
                                           backgroundColor: clrGreen,
                                         ),
                                         onPressed: ((selectedPayment == null &&
-                                                    orderType == OrderType.takeaway) ||
-                                                (orderType == OrderType.dinein &&
+                                                    orderType ==
+                                                        OrderType.takeaway) ||
+                                                (orderType ==
+                                                        OrderType.dinein &&
                                                     selectedTable == null) ||
-                                                (orderType == OrderType.delivery &&
+                                                (orderType ==
+                                                        OrderType.delivery &&
                                                     selectedArea == null))
                                             ? null
                                             : placeOrder,
                                         child: TxtWidget(
                                           txt: (selectedPayment == null &&
-                                                  orderType == OrderType.takeaway)
+                                                  orderType ==
+                                                      OrderType.takeaway)
                                               ? 'Select Payment'
-                                              : (orderType == OrderType.dinein &&
+                                              : (orderType ==
+                                                          OrderType.dinein &&
                                                       selectedTable == null)
                                                   ? 'Select Table'
-                                                  : (orderType == OrderType.delivery &&
+                                                  : (orderType ==
+                                                              OrderType
+                                                                  .delivery &&
                                                           selectedArea == null)
                                                       ? 'Select Address'
                                                       : 'Complete Order',
@@ -358,8 +383,10 @@ class MenuScreen extends ConsumerWidget {
                           ],
                         );
                       },
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (e, st) => Center(child: Text('Error loading cart: $e')),
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (e, st) =>
+                          Center(child: Text('Error loading cart: $e')),
                     ),
                   ),
                 ],

@@ -1,3 +1,4 @@
+// lib/core/new_db_helper.dart
 import 'dart:io';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -98,6 +99,69 @@ class NewDBHelper {
               price REAL NOT NULL,
               FOREIGN KEY(orderId) REFERENCES orders(id) ON DELETE CASCADE,
               FOREIGN KEY(menuItemId) REFERENCES menuItems(id) ON DELETE CASCADE
+            )
+          ''');
+
+          // --- STAFF ---
+          await db.execute('''
+            CREATE TABLE staff (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              email TEXT,
+              phone TEXT,
+              role TEXT NOT NULL,
+              permissions TEXT,          
+              salary REAL DEFAULT 0,
+              active INTEGER DEFAULT 1,  -- 1 = active, 0 = inactive
+              createdAt TEXT NOT NULL,
+              updatedAt TEXT
+            )
+          ''');
+
+          // --- STAFF ATTENDANCE ---
+          // half: 1 or 2 (first half, second half), present: 0/1
+          await db.execute('''
+            CREATE TABLE staffAttendance (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              staffId INTEGER NOT NULL,
+              date TEXT NOT NULL,
+              part  INTEGER NOT NULL,
+              present INTEGER NOT NULL DEFAULT 1,
+              createdAt TEXT NOT NULL,
+              FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE
+            )
+          ''');
+
+          // --- STAFF BONUSES ---
+          await db.execute('''
+            CREATE TABLE staffBonus (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              staffId INTEGER NOT NULL,
+              amount REAL NOT NULL,
+              reason TEXT,
+              createdAt TEXT NOT NULL,
+              FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE
+            )
+          ''');
+
+          // --- STAFF FINES ---
+          await db.execute('''
+            CREATE TABLE staffFines (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              staffId INTEGER NOT NULL,
+              amount REAL NOT NULL,
+              reason TEXT,
+              createdAt TEXT NOT NULL,
+              FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE
+            )
+          ''');
+
+          // --- ROLES ---
+          await db.execute('''
+            CREATE TABLE roles (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              roleName TEXT UNIQUE NOT NULL,
+              permissions TEXT
             )
           ''');
 

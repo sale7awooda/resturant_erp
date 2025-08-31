@@ -1,31 +1,33 @@
 import 'package:starter_template/core/new_db_helper.dart';
-
 class OrdersDao {
   static const table = 'orders';
 
   static Future<int> insert(Map<String, dynamic> data) =>
       NewDBHelper.insert(table, data);
 
+  /// Get orders with optional filters
   static Future<List<Map<String, dynamic>>> getAll({
     String? date,
     String? orderType,
-    String? paymentType,
+    String? paymentStatus,
   }) async {
-    String where = '1=1';
+    final whereClauses = <String>[];
     final args = <dynamic>[];
 
     if (date != null) {
-      where += ' AND DATE(createdAt)=?';
+      whereClauses.add('DATE(createdAt)=?');
       args.add(date);
     }
     if (orderType != null) {
-      where += ' AND orderType=?';
+      whereClauses.add('orderType=?');
       args.add(orderType);
     }
-    if (paymentType != null) {
-      where += ' AND paymentType=?';
-      args.add(paymentType);
+    if (paymentStatus != null) {
+      whereClauses.add('paymentStatus=?');
+      args.add(paymentStatus);
     }
+
+    final where = whereClauses.isEmpty ? null : whereClauses.join(' AND ');
 
     return NewDBHelper.query(
       table,

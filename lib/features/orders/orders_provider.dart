@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:starter_template/core/new_db_helper.dart';
@@ -15,10 +14,24 @@ final ordersFilterTypeProvider = StateProvider<String?>((_) => null);
 final ordersFilterPayProvider = StateProvider<String?>((_) => null);
 final currentUserIdProvider = Provider<String>((_) => 'user-123');
 
+/// Orders screen (filtered by date/type/status)
 final ordersAsyncProvider =
     AsyncNotifierProvider<OrdersNotifier, List<OrderModel>>(
   () => OrdersNotifier(),
 );
+
+/// Dashboard (all orders, no filters)
+final allOrdersProvider = FutureProvider<List<OrderModel>>((ref) async {
+  final rows = await OrdersDao.getAll(); // no date filter
+  final orders = <OrderModel>[];
+  for (final row in rows) {
+    final orderId = row['id'] as int;
+    final itemsRows = await OrderItemsDao.getByOrder(orderId);
+    final items = itemsRows.map((e) => OrderItemModel.fromMap(e)).toList();
+    orders.add(OrderModel.fromMap(row, orderItems: items));
+  }
+  return orders;
+});
 
 class OrdersNotifier extends AsyncNotifier<List<OrderModel>> {
   String _fmtDate(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
@@ -34,7 +47,7 @@ class OrdersNotifier extends AsyncNotifier<List<OrderModel>> {
     final rows = await OrdersDao.getAll(
       date: _fmtDate(date),
       orderType: type,
-      paymentType: pay,
+      paymentStatus: pay,
     );
 
     final orders = <OrderModel>[];
@@ -79,13 +92,8 @@ class OrdersNotifier extends AsyncNotifier<List<OrderModel>> {
     final cartItems = cartRows.map((e) => CartItemModel.fromMap(e)).toList();
     if (cartItems.isEmpty) throw Exception("Cart is empty");
 
-    // final deliveryFee = ref.watch(selectedDeliveryAddressProvider)?.cost;
     final totalAmount =
         (cartItems.fold<double>(0, (sum, c) => sum + c.price * c.quantity));
-
-    // final totalAmountDelivery =
-    //     (cartItems.fold<double>(0, (sum, c) => sum + c.price * c.quantity) +
-    //         (deliveryFee ?? 0));
     final totalItems = cartItems.fold<int>(0, (sum, c) => sum + c.quantity);
 
     if (pendingOrder != null) {
@@ -101,8 +109,6 @@ class OrdersNotifier extends AsyncNotifier<List<OrderModel>> {
       );
 
       await OrdersDao.updateOrder(updatedOrder.toMap(), pendingOrder.id!);
-      debugPrint("New order map: ${updatedOrder.toMap()}");
-
       await OrderItemsDao.deleteByOrder(pendingOrder.id!);
 
       for (final item in updatedOrder.orderItems) {
@@ -130,20 +136,15 @@ class OrdersNotifier extends AsyncNotifier<List<OrderModel>> {
         deliveryFee: deliveryFee ?? 0,
         deliveryAddress: deliveryAddress,
         createdAt: DateTime.now(),
-        orderItems: [], // temporarily empty
+        orderItems: [],
         specialOrderId: specialOrderId,
       );
 
       final newId = await OrdersDao.insert(newOrder.toMap());
-      final inserted = await OrdersDao.getAll();
-      debugPrint("Inserted DB row: $inserted");
 
       for (final item in cartItems) {
         await OrderItemsDao.insert(item.toOrderItem(newId).toMap());
       }
-
-      debugPrint("Inserted DB row: $inserted");
-      debugPrint("New order map: ${newOrder.toMap()}");
 
       await _log('orderPlaced', 'order', newId.toString(),
           'Placed order $specialOrderId');
