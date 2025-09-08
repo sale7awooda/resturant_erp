@@ -50,6 +50,10 @@ class MenuScreen extends ConsumerWidget {
           );
       ref.read(cartAsyncNotifierProvider.notifier).clearCart();
 
+      ref.invalidate(paymentMethodProvider);
+      ref.invalidate(selectedTableProvider);
+      ref.invalidate(selectedDeliveryAddressProvider);
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -319,7 +323,7 @@ class MenuScreen extends ConsumerWidget {
                                       const TxtWidget(txt: 'Total Cost'),
                                       TxtWidget(
                                         txt:
-                                            '${total + (selectedAreaCost ?? 0)} SDG',
+                                            '${total + (orderType == OrderType.delivery ? (selectedAreaCost ?? 0) : 0)} SDG',
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ],
@@ -333,10 +337,16 @@ class MenuScreen extends ConsumerWidget {
                                           minimumSize: Size(135.h, 60.h),
                                           backgroundColor: clrRed,
                                         ),
-                                        onPressed: () => ref
-                                            .read(cartAsyncNotifierProvider
-                                                .notifier)
-                                            .clearCart(),
+                                        onPressed: () {
+                                          ref
+                                              .read(cartAsyncNotifierProvider
+                                                  .notifier)
+                                              .clearCart();
+                                          ref.invalidate(paymentMethodProvider);
+                                          ref.invalidate(selectedTableProvider);
+                                          ref.invalidate(
+                                              selectedDeliveryAddressProvider);
+                                        },
                                         child: const TxtWidget(
                                             txt: 'Clear Cart', color: clrWhite),
                                       ),

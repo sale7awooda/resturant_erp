@@ -1,33 +1,93 @@
-// lib/features/staff/provider/staff_provider.dart
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:starter_template/features/staff/stadd_dao.dart';
+import 'package:starter_template/core/new_db_helper.dart';
+import 'package:starter_template/features/staff/staff_dao.dart';
 import 'package:starter_template/features/staff/staff_model.dart';
 
-/// -------------------------
-/// Providers
-/// -------------------------
+/// ======================================================
+/// STAFF
+/// ======================================================
 
-/// Staff list provider (auto-updates after invalidation).
-final staffListProvider = FutureProvider<List<StaffModel>>((ref) async {
+final staffListProvider = FutureProvider.autoDispose<List<StaffModel>>((ref) {
   return StaffDao.getAllStaff();
 });
 
-/// Main notifier provider for staff CRUD, attendance, bonuses, fines, salaries.
 final staffNotifierProvider = Provider<StaffNotifier>((ref) {
   return StaffNotifier(ref);
 });
 
-/// -------------------------
-/// Staff Notifier
-/// -------------------------
+/// ======================================================
+/// ATTENDANCE
+/// ======================================================
+
+/// All attendance records for a month (all staff)
+final monthlyAttendanceProvider =
+    FutureProvider.family.autoDispose<List<StaffAttendanceModel>, DateTime>(
+  (ref, month) async {
+    final normalized = DateTime(month.year, month.month, 1);
+    final notifier = ref.read(staffNotifierProvider);
+    return notifier.monthlyAttendance(
+      year: normalized.year,
+      month: normalized.month,
+    );
+  },
+);
+
+/// Staff attendance + bonus/fine for one month (used in detail screen)
+
+final staffMonthlyDataProvider = FutureProvider.family
+    .autoDispose<Map<String, dynamic>, StaffMonthlyParams>((ref, params) async {
+  final notifier = ref.read(staffNotifierProvider);
+  return notifier.staffMonthlyData(
+    staffId: params.staffId,
+    month: DateTime(params.month.year, params.month.month, 1),
+  );
+});
+
+/// ======================================================
+/// LOANS
+/// ======================================================
+
+final staffLoansProvider =
+    FutureProvider.family<List<StaffLoanModel>, int>((ref, staffId) {
+  return StaffDao.loansForStaff(staffId);
+});
+
+/// ======================================================
+/// PAYROLL
+/// ======================================================
+
+/// Single staff payroll for a given month
+final staffPayrollProvider = FutureProvider.family
+    .autoDispose<StaffPayrollModel, Map<String, dynamic>>((ref, params) async {
+  final staff = params['staff'] as StaffModel;
+  final month = params['month'] as DateTime;
+  return StaffDao.calculatePayroll(staff, month);
+});
+
+/// Salary sheet (all staff payroll for a month)
+final payrollReportProvider =
+    FutureProvider.family<List<StaffPayrollModel>, DateTime>((ref, month) {
+  return StaffDao.payrollReport(month);
+});
+
+/// Total payroll cost in a month
+final payrollCostProvider =
+    FutureProvider.family<double, DateTime>((ref, month) {
+  return StaffDao.totalPayrollCost(month);
+});
+
+/// ======================================================
+/// STAFF NOTIFIER
+/// ======================================================
+
 class StaffNotifier {
   final Ref ref;
   StaffNotifier(this.ref);
 
-  /// -------------------------
-  /// CRUD OPERATIONS
-  /// -------------------------
+  // -------------------------
+  // STAFF CRUD
+  // -------------------------
   Future<int> addStaff(StaffModel staff) async {
     final id = await StaffDao.insertStaff(staff);
     ref.invalidate(staffListProvider);
@@ -46,146 +106,215 @@ class StaffNotifier {
     return res;
   }
 
-  /// -------------------------
-  /// ATTENDANCE
-  /// -------------------------
+  // -------------------------
+  // ATTENDANCE
+  // -------------------------
+  Future<List<StaffAttendanceModel>> monthlyAttendance({
+    required int year,
+    required int month,
+  }) async {
+    final datePrefix = '$year-${month.toString().padLeft(2, '0')}%';
+    final rows = await NewDBHelper.query(
+      'staffAttendance',
+      where: 'date LIKE ?',
+      whereArgs: [datePrefix],
+      orderBy: 'staffId ASC, part ASC',
+    );
 
-  Future<Map<String, double>> getSummaryForMonth(
-      int staffId, int year, int month) async {
-    final bonuses = await bonusesForStaff(staffId);
-    final fines = await finesForStaff(staffId);
-
-    final totalBonus = bonuses
-        .where((b) => b.createdAt.year == year && b.createdAt.month == month)
-        .fold(0.0, (sum, b) => sum + b.amount);
-    final totalFines = fines
-        .where((f) => f.createdAt.year == year && f.createdAt.month == month)
-        .fold(0.0, (sum, f) => sum + f.amount);
-
-    return {'bonus': totalBonus, 'fine': totalFines};
+    return rows.map((r) => StaffAttendanceModel.fromMap(r)).toList();
   }
 
-  /// Get attendance records for a staff member on a given date.
-  Future<List<StaffAttendanceModel>> attendanceForStaff(
-    int staffId, {
-    required String date,
-  }) =>
-      StaffDao.attendanceForStaff(staffId, date: date);
+  Future<Map<String, dynamic>> staffMonthlyData({
+    required int staffId,
+    required DateTime month,
+  }) async {
+    final year = month.year;
+    final m = month.month;
+    final monthPrefix = '$year-${m.toString().padLeft(2, '0')}%';
+    final db = await NewDBHelper.db;
 
-  /// Get attendance records by date for all staff.
-  Future<List<StaffAttendanceModel>> attendanceByDate(String date) =>
-      StaffDao.attendanceByDate(date);
+    // Attendance
+    final attendanceRows = await db.query(
+      'staffAttendance',
+      where: 'staffId=? AND date LIKE ?',
+      whereArgs: [staffId, monthPrefix],
+    );
+    final attendanceRecords =
+        attendanceRows.map((r) => StaffAttendanceModel.fromMap(r)).toList();
 
-  /// Record attendance for a specific part of the day.
-  /// [presentMap] = staffId -> present (true/false)
-  /// [part] = 1 (morning) or 2 (afternoon)
-  Future<void> recordAttendancePart(
-    Map<int, bool> presentMap,
-    int part,
-  ) async {
-    final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final staffList = await StaffDao.getAllStaff();
-
-    // Upsert each staff attendance row
-    for (final staff in staffList) {
-      final present = presentMap[staff.id!] ?? false;
-      final att = StaffAttendanceModel(
-        staffId: staff.id!,
-        date: date,
-        part: part,
-        present: present,
-      );
-      await StaffDao.upsertAttendance(att);
+    int present = 0, late = 0, absent = 0;
+    final grouped = <String, List<StaffAttendanceModel>>{};
+    for (final r in attendanceRecords) {
+      grouped.putIfAbsent(r.date, () => []).add(r);
+    }
+    for (final entry in grouped.values) {
+      final presentCount =
+          entry.where((r) => r.status == AttendanceStatus.present).length;
+      if (presentCount == 2) {
+        present++;
+      } else if (presentCount == 1) {
+        late++;
+      } else {
+        absent++;
+      }
     }
 
-    // If this was part 2, evaluate absences and fines
+    // Bonuses
+    final bonusRows = await db.query(
+      'staffBonus',
+      where: 'staffId=? AND strftime("%Y-%m", createdAt)=?',
+      whereArgs: [staffId, "$year-${m.toString().padLeft(2, '0')}"],
+    );
+    final totalBonus = bonusRows.fold<double>(
+        0, (sum, r) => sum + (r['amount'] as num).toDouble());
+
+    // Fines
+    final fineRows = await db.query(
+      'staffFines',
+      where: 'staffId=? AND strftime("%Y-%m", createdAt)=?',
+      whereArgs: [staffId, "$year-${m.toString().padLeft(2, '0')}"],
+    );
+    final totalFine = fineRows.fold<double>(
+        0, (sum, r) => sum + (r['amount'] as num).toDouble());
+
+    return {
+      'attendance': {'present': present, 'late': late, 'absent': absent},
+      'bonus': totalBonus,
+      'fine': totalFine,
+    };
+  }
+
+  Future<void> recordAttendancePart(
+    Map<int, AttendanceStatus> statusMap,
+    int part,
+  ) async {
+    final staffList = await StaffDao.getAllStaff();
+    final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final db = await NewDBHelper.db;
+
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+
+      for (final staff in staffList) {
+        final status = statusMap[staff.id!] ?? AttendanceStatus.absent;
+        batch.rawInsert(
+          '''
+          INSERT INTO staffAttendance (staffId, date, part, status, createdAt)
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(staffId, date, part) 
+          DO UPDATE SET status=excluded.status, createdAt=excluded.createdAt
+          ''',
+          [
+            staff.id!,
+            date,
+            part,
+            status.index,
+            DateTime.now().toIso8601String()
+          ],
+        );
+      }
+
+      await batch.commit(noResult: true);
+    });
+
     if (part == 2) {
       await _applyAutomaticAbsenceFines(staffList, date);
     }
 
     ref.invalidate(staffListProvider);
+    ref.invalidate(monthlyAttendanceProvider);
   }
 
-  /// Internal helper: Apply automatic fines for absences.
   Future<void> _applyAutomaticAbsenceFines(
     List<StaffModel> staffList,
     String date,
   ) async {
-    final attendanceRows = await StaffDao.attendanceByDate(date);
+    final db = await NewDBHelper.db;
+    final rows = await db.query(
+      'staffAttendance',
+      where: 'date = ?',
+      whereArgs: [date],
+    );
 
-    // Group attendance by staffId
-    final Map<int, List<StaffAttendanceModel>> grouped = {};
-    for (final att in attendanceRows) {
-      grouped.putIfAbsent(att.staffId, () => []).add(att);
+    final grouped = <int, Map<int, StaffAttendanceModel>>{};
+    for (final r in rows) {
+      final rec = StaffAttendanceModel.fromMap(r);
+      grouped.putIfAbsent(rec.staffId, () => {})[rec.part] = rec;
     }
 
+    final batch = db.batch();
+    final now = DateTime.now().toIso8601String();
+
     for (final staff in staffList) {
-      final entries = grouped[staff.id!] ?? [];
+      final p1 = grouped[staff.id]?[1] ??
+          StaffAttendanceModel(
+            staffId: staff.id!,
+            date: date,
+            part: 1,
+            status: AttendanceStatus.absent,
+          );
+      final p2 = grouped[staff.id]?[2] ??
+          StaffAttendanceModel(
+            staffId: staff.id!,
+            date: date,
+            part: 2,
+            status: AttendanceStatus.absent,
+          );
 
-      final p1 = entries.firstWhere(
-        (e) => e.part == 1,
-        orElse: () => StaffAttendanceModel(
-          staffId: staff.id!,
-          date: date,
-          part: 1,
-          present: false,
-        ),
-      );
-
-      final p2 = entries.firstWhere(
-        (e) => e.part == 2,
-        orElse: () => StaffAttendanceModel(
-          staffId: staff.id!,
-          date: date,
-          part: 2,
-          present: false,
-        ),
-      );
-
-      // Salary calculations
       final dailySalary = staff.salary / 30.0;
-      final halfDeduction = dailySalary / 2.0;
+      double fineAmount = 0;
+      String reason = '';
 
-      if (!p1.present && !p2.present) {
-        // Full-day absence
-        await StaffDao.insertFine(
-          StaffFineModel(
-            staffId: staff.id!,
-            amount: dailySalary,
-            reason: 'Full day absent automatic deduction',
-            createdAt: DateTime.now(),
-          ),
-        );
-      } else if (!p1.present || !p2.present) {
-        // Half-day absence
-        await StaffDao.insertFine(
-          StaffFineModel(
-            staffId: staff.id!,
-            amount: halfDeduction,
-            reason: 'Half day absent automatic deduction',
-            createdAt: DateTime.now(),
-          ),
+      if (p1.status == AttendanceStatus.absent &&
+          p2.status == AttendanceStatus.absent) {
+        fineAmount = dailySalary;
+        reason = 'Full day absent automatic deduction';
+      } else if (p1.status == AttendanceStatus.absent ||
+          p2.status == AttendanceStatus.absent ||
+          (p1.status == AttendanceStatus.late &&
+              p2.status == AttendanceStatus.late)) {
+        fineAmount = dailySalary / 2.0;
+        reason = 'Half day absence/late automatic deduction';
+      }
+
+      if (fineAmount > 0) {
+        batch.insert(
+          'staffFines',
+          {
+            'staffId': staff.id!,
+            'amount': fineAmount,
+            'reason': reason,
+            'type': 'automatic',
+            'createdAt': now,
+          },
         );
       }
     }
+
+    await batch.commit(noResult: true);
+
+    ref.invalidate(payrollReportProvider);
+    ref.invalidate(payrollCostProvider);
   }
 
-  /// -------------------------
-  /// BONUSES & FINES
-  /// -------------------------
+  // -------------------------
+  // BONUSES & FINES
+  // -------------------------
   Future<int> addBonus({
     required int staffId,
     required double amount,
     String? reason,
   }) async {
-    final bonus = StaffBonusModel(
-      staffId: staffId,
-      amount: amount,
-      reason: reason,
-      createdAt: DateTime.now(),
+    final id = await StaffDao.insertBonus(
+      StaffBonusModel(
+        staffId: staffId,
+        amount: amount,
+        reason: reason,
+        createdAt: DateTime.now(),
+      ),
     );
-    final id = await StaffDao.insertBonus(bonus);
-    ref.invalidate(staffListProvider);
+    ref.invalidate(payrollReportProvider);
+    ref.invalidate(payrollCostProvider);
     return id;
   }
 
@@ -193,48 +322,43 @@ class StaffNotifier {
     required int staffId,
     required double amount,
     String? reason,
+    String type = 'manual',
   }) async {
-    final fine = StaffFineModel(
-      staffId: staffId,
-      amount: amount,
-      reason: reason,
-      createdAt: DateTime.now(),
+    final id = await StaffDao.upsertFine(
+      StaffFineModel(
+        staffId: staffId,
+        amount: amount,
+        reason: reason,
+        type: type,
+        createdAt: DateTime.now(),
+      ),
     );
-    final id = await StaffDao.insertFine(fine);
-    ref.invalidate(staffListProvider);
+    ref.invalidate(payrollReportProvider);
+    ref.invalidate(payrollCostProvider);
     return id;
   }
 
-  Future<List<StaffBonusModel>> bonusesForStaff(int staffId) =>
-      StaffDao.bonusesForStaff(staffId);
+  // -------------------------
+  // LOANS
+  // -------------------------
+  Future<int> addLoan({
+    required int staffId,
+    required double amount,
+    String? reason,
+  }) async {
+    final id = await StaffDao.insertLoan(
+      StaffLoanModel(
+        staffId: staffId,
+        amount: amount,
+        reason: reason,
+        createdAt: DateTime.now(),
+      ),
+    );
 
-  Future<List<StaffFineModel>> finesForStaff(int staffId) =>
-      StaffDao.finesForStaff(staffId);
+    ref.invalidate(staffLoansProvider(staffId));
+    ref.invalidate(payrollReportProvider);
+    ref.invalidate(payrollCostProvider);
 
-  /// -------------------------
-  /// SALARY CALCULATION
-  /// -------------------------
-
-  /// Compute net salary for a month:
-  /// base salary + bonuses - fines
-  Future<double> computeNetSalaryForMonth(
-    int staffId,
-    int year,
-    int month,
-    double baseSalary,
-  ) async {
-    final bonuses = await StaffDao.bonusesForStaff(staffId);
-    final fines = await StaffDao.finesForStaff(staffId);
-
-    // Filter bonuses and fines by year/month
-    final totalBonuses = bonuses
-        .where((b) => b.createdAt.year == year && b.createdAt.month == month)
-        .fold<double>(0.0, (sum, b) => sum + b.amount);
-
-    final totalFines = fines
-        .where((f) => f.createdAt.year == year && f.createdAt.month == month)
-        .fold<double>(0.0, (sum, f) => sum + f.amount);
-
-    return baseSalary + totalBonuses - totalFines;
+    return id;
   }
 }

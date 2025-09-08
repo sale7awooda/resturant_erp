@@ -30,12 +30,14 @@ class _LogsScreenState extends ConsumerState<LogsScreen> {
     );
     if (pickedStart == null) return;
 
-    final pickedEnd = await showDatePicker(
-      context: context,
-      initialDate: _selectedEndDate ?? pickedStart,
-      firstDate: pickedStart,
-      lastDate: now,
-    );
+    final pickedEnd = context.mounted
+        ? await showDatePicker(
+            context: context,
+            initialDate: _selectedEndDate ?? pickedStart,
+            firstDate: pickedStart,
+            lastDate: now,
+          )
+        : now;
     if (pickedEnd == null) return;
 
     setState(() {

@@ -152,6 +152,7 @@ class OrdersNotifier extends AsyncNotifier<List<OrderModel>> {
 
     await NewDBHelper.delete('cart', where: '1=1', whereArgs: []);
     ref.invalidate(cartAsyncNotifierProvider);
+    ref.invalidate(allOrdersProvider);
     await reload();
   }
 
