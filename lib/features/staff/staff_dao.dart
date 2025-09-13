@@ -7,14 +7,19 @@ class StaffDao {
   static const attendanceTable = 'staffAttendance';
   static const bonusTable = 'staffBonus';
   static const fineTable = 'staffFines';
+  static const loanTable = 'staffLoans';
+  static const payrollTable = 'staffPayroll';
 
   // -------------------------
   // STAFF CRUD
   // -------------------------
   static Future<int> insertStaff(StaffModel s) async {
     final db = await NewDBHelper.db;
-    return await db.insert(staffTable, s.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert(
+      staffTable,
+      s.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   static Future<int> updateStaff(StaffModel s) async {
@@ -48,49 +53,53 @@ class StaffDao {
     return rows.map((r) => StaffModel.fromMap(r)).toList();
   }
 
-// -------------------------
-// ATTENDANCE
-// -------------------------
+  // -------------------------
+  // ATTENDANCE
+  // -------------------------
   static Future<int> upsertAttendance(StaffAttendanceModel a) async {
     final db = await NewDBHelper.db;
-    final res = await db.insert(
-      attendanceTable,
-      a.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    return await db.transaction((txn) async {
+      final res = await txn.insert(
+        attendanceTable,
+        a.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
 
-    // 🔥 After updating attendance → recalc fines for that staff on that date
-    await StaffDao.recalculateFineForDay(a.staffId, a.date);
-
-    return res;
+      // 🔥 After updating attendance → recalc fines inside txn
+      await _recalculateFineForDayTxn(txn, a.staffId, a.date);
+      return res;
+    });
   }
 
   static Future<void> upsertAttendanceBatch(
       List<StaffAttendanceModel> list) async {
     final db = await NewDBHelper.db;
-    final batch = db.batch();
-    for (var a in list) {
-      batch.insert(
-        attendanceTable,
-        a.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
-    await batch.commit(noResult: true);
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (var a in list) {
+        batch.insert(
+          attendanceTable,
+          a.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      await batch.commit(noResult: true);
 
-    // 🔥 Recalculate fines for each unique staff+date
-    final uniqueDates = {
-      for (var a in list) '${a.staffId}-${a.date}': [a.staffId, a.date]
-    }.values;
+      // 🔥 Recalculate fines for each unique staff+date in same txn
+      final uniqueDates = {
+        for (var a in list) '${a.staffId}-${a.date}': [a.staffId, a.date]
+      }.values;
 
-    for (final entry in uniqueDates) {
-      await recalculateFineForDay(entry[0] as int, entry[1] as String);
-    }
+      for (final entry in uniqueDates) {
+        await _recalculateFineForDayTxn(
+            txn, entry[0] as int, entry[1] as String);
+      }
+    });
   }
 
-// -------------------------
-// FINES
-// -------------------------
+  // -------------------------
+  // FINES
+  // -------------------------
   static Future<int> upsertFine(StaffFineModel f) async {
     final db = await NewDBHelper.db;
     return await db.insert(
@@ -104,13 +113,20 @@ class StaffDao {
 
   static Future<void> recalculateFineForDay(int staffId, String date) async {
     final db = await NewDBHelper.db;
+    await db.transaction((txn) async {
+      await _recalculateFineForDayTxn(txn, staffId, date);
+    });
+  }
 
+  /// Internal helper: recalc fine inside an existing txn
+  static Future<void> _recalculateFineForDayTxn(
+      Transaction txn, int staffId, String date) async {
     // Get staff
     final staffList = await getAllStaff();
     final staff = staffList.firstWhere((s) => s.id == staffId);
 
     // Get both parts of attendance
-    final rows = await db.query(
+    final rows = await txn.query(
       attendanceTable,
       where: 'staffId=? AND date=?',
       whereArgs: [staffId, date],
@@ -149,7 +165,7 @@ class StaffDao {
     }
 
     if (fineAmount > 0) {
-      await db.insert(
+      await txn.insert(
         fineTable,
         {
           'staffId': staffId,
@@ -161,8 +177,8 @@ class StaffDao {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } else {
-      // ✅ If staff is no longer absent/late → remove auto fine for that date
-      await db.delete(
+      // ✅ Remove auto fine if no longer needed
+      await txn.delete(
         fineTable,
         where: 'staffId=? AND type=? AND reason LIKE ?',
         whereArgs: [staffId, 'automatic', '%deduction%'],
@@ -172,17 +188,19 @@ class StaffDao {
 
   static Future<void> upsertFinesBatch(List<StaffFineModel> list) async {
     final db = await NewDBHelper.db;
-    final batch = db.batch();
-    for (var f in list) {
-      batch.insert(
-        fineTable,
-        f.toMap(),
-        conflictAlgorithm: f.type == 'automatic'
-            ? ConflictAlgorithm.replace
-            : ConflictAlgorithm.abort,
-      );
-    }
-    await batch.commit(noResult: true);
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (var f in list) {
+        batch.insert(
+          fineTable,
+          f.toMap(),
+          conflictAlgorithm: f.type == 'automatic'
+              ? ConflictAlgorithm.replace
+              : ConflictAlgorithm.abort,
+        );
+      }
+      await batch.commit(noResult: true);
+    });
   }
 
   static Future<List<StaffFineModel>> finesForStaff(int staffId,
@@ -229,46 +247,8 @@ class StaffDao {
   }
 
   // -------------------------
-  // FINES
+  // LOANS
   // -------------------------
-  /// For automatic fines → upsert (replace existing)
-  /// For manual fines → insert always (can have multiple)
-  // static Future<int> upsertFine(StaffFineModel f) async {
-  //   final db = await NewDBHelper.db;
-  //   if (f.type == 'automatic') {
-  //     return await db.insert(
-  //       fineTable,
-  //       f.toMap(),
-  //       conflictAlgorithm: ConflictAlgorithm.replace,
-  //     );
-  //   } else {
-  //     return await db.insert(fineTable, f.toMap());
-  //   }
-  // }
-
-  // static Future<void> upsertFinesBatch(List<StaffFineModel> list) async {
-  //   final db = await NewDBHelper.db;
-  //   final batch = db.batch();
-  //   for (var f in list) {
-  //     if (f.type == 'automatic') {
-  //       batch.insert(
-  //         fineTable,
-  //         f.toMap(),
-  //         conflictAlgorithm: ConflictAlgorithm.replace,
-  //       );
-  //     } else {
-  //       batch.insert(fineTable, f.toMap());
-  //     }
-  //   }
-  //   await batch.commit(noResult: true);
-  // }
-
-// -------------------------
-// loans
-//--------------------------
-  static const loanTable = 'staffLoans';
-  static const payrollTable = 'staffPayroll';
-
   static Future<int> insertLoan(StaffLoanModel l) async {
     final db = await NewDBHelper.db;
     return await db.insert(
@@ -298,80 +278,83 @@ class StaffDao {
       whereArgs: [loanId],
     );
   }
-//-------------------
-//payroll
-//-------------------
 
+  // -------------------------
+  // PAYROLL
+  // -------------------------
   static Future<int> insertPayroll(StaffPayrollModel p) async {
     final db = await NewDBHelper.db;
-    return db.insert(payrollTable, p.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    return db.insert(
+      payrollTable,
+      p.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
-  /// Calculate payroll for one staff for a given month
   static Future<StaffPayrollModel> calculatePayroll(
       StaffModel staff, DateTime month) async {
     final db = await NewDBHelper.db;
     final yearMonth = "${month.year}-${month.month.toString().padLeft(2, '0')}";
 
-    // Bonuses
-    final bonusRows = await db.query(
-      bonusTable,
-      where: 'staffId=? AND strftime("%Y-%m", createdAt)=?',
-      whereArgs: [staff.id, yearMonth],
-    );
-    final totalBonus = bonusRows.fold<double>(
-        0, (sum, r) => sum + (r['amount'] as num).toDouble());
-
-    // Fines
-    final fineRows = await db.query(
-      fineTable,
-      where: 'staffId=? AND strftime("%Y-%m", createdAt)=?',
-      whereArgs: [staff.id, yearMonth],
-    );
-    final totalFine = fineRows.fold<double>(
-        0, (sum, r) => sum + (r['amount'] as num).toDouble());
-
-    // Loan deduction (simple rule: oldest unrepaid loan gets deducted fully here)
-    final loanRows = await db.query(
-      'staffLoans',
-      where: 'staffId=? AND repaid=0',
-      whereArgs: [staff.id],
-      orderBy: 'createdAt ASC',
-    );
-    double loanDeduction = 0;
-    if (loanRows.isNotEmpty) {
-      final loan = StaffLoanModel.fromMap(loanRows.first);
-      loanDeduction = loan.amount;
-      // Mark loan as repaid (one-time repayment)
-      await db.update(
-        'staffLoans',
-        {'repaid': 1},
-        where: 'id=?',
-        whereArgs: [loan.id],
+    return await db.transaction((txn) async {
+      // Bonuses
+      final bonusRows = await txn.query(
+        bonusTable,
+        where: 'staffId=? AND strftime("%Y-%m", createdAt)=?',
+        whereArgs: [staff.id, yearMonth],
       );
-    }
+      final totalBonus = bonusRows.fold<double>(
+          0, (sum, r) => sum + (r['amount'] as num).toDouble());
 
-    final net = staff.salary + totalBonus - totalFine - loanDeduction;
+      // Fines
+      final fineRows = await txn.query(
+        fineTable,
+        where: 'staffId=? AND strftime("%Y-%m", createdAt)=?',
+        whereArgs: [staff.id, yearMonth],
+      );
+      final totalFine = fineRows.fold<double>(
+          0, (sum, r) => sum + (r['amount'] as num).toDouble());
 
-    final payroll = StaffPayrollModel(
-      staffId: staff.id!,
-      month: yearMonth,
-      baseSalary: staff.salary,
-      bonus: totalBonus,
-      fines: totalFine,
-      loans: loanDeduction,
-      netPayable: net,
-      createdAt: DateTime.now(),
-    );
+      // Loan deduction
+      final loanRows = await txn.query(
+        loanTable,
+        where: 'staffId=? AND repaid=0',
+        whereArgs: [staff.id],
+        orderBy: 'createdAt ASC',
+      );
+      double loanDeduction = 0;
+      if (loanRows.isNotEmpty) {
+        final loan = StaffLoanModel.fromMap(loanRows.first);
+        loanDeduction = loan.amount;
+        await txn.update(
+          loanTable,
+          {'repaid': 1},
+          where: 'id=?',
+          whereArgs: [loan.id],
+        );
+      }
 
-    await db.insert(
-      'staffPayroll',
-      payroll.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+      final net = staff.salary + totalBonus - totalFine - loanDeduction;
 
-    return payroll;
+      final payroll = StaffPayrollModel(
+        staffId: staff.id!,
+        month: yearMonth,
+        baseSalary: staff.salary,
+        bonus: totalBonus,
+        fines: totalFine,
+        loans: loanDeduction,
+        netPayable: net,
+        createdAt: DateTime.now(),
+      );
+
+      await txn.insert(
+        payrollTable,
+        payroll.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      return payroll;
+    });
   }
 
   static Future<List<StaffPayrollModel>> payrollForStaff(int staffId) async {
@@ -384,35 +367,6 @@ class StaffDao {
     return rows.map((r) => StaffPayrollModel.fromMap(r)).toList();
   }
 
-// static Future<StaffPayrollModel> calculatePayroll(
-//     StaffModel staff, DateTime month) async {
-//   final yearMonth = "${month.year}-${month.month.toString().padLeft(2, '0')}";
-
-//   final bonuses = await StaffDao.bonusesForStaff(staff.id!);
-//   final fines = await StaffDao.finesForStaff(staff.id!);
-//   final loans = await StaffDao.loansForStaff(staff.id!);
-
-//   final totalBonus = bonuses.fold(0.0, (s, b) => s + b.amount);
-//   final totalFines = fines.fold(0.0, (s, f) => s + f.amount);
-//   final totalLoans = loans.fold(0.0, (s, l) => s + l.amount);
-
-//   final net = staff.salary + totalBonus - totalFines - totalLoans;
-
-//   final payroll = StaffPayrollModel(
-//     staffId: staff.id!,
-//     month: yearMonth,
-//     baseSalary: staff.salary,
-//     bonus: totalBonus,
-//     fines: totalFines,
-//     loans: totalLoans,
-//     netPayable: net,
-//   );
-
-//   await insertPayroll(payroll);
-//   return payroll;
-// }
-
-  /// Get payroll report for all staff in a given month
   static Future<List<StaffPayrollModel>> payrollReport(DateTime month) async {
     final yearMonth = "${month.year}-${month.month.toString().padLeft(2, '0')}";
     final rows = await NewDBHelper.query(
@@ -424,7 +378,6 @@ class StaffDao {
     return rows.map((r) => StaffPayrollModel.fromMap(r)).toList();
   }
 
-  /// Get total payroll cost for a month
   static Future<double> totalPayrollCost(DateTime month) async {
     final yearMonth = "${month.year}-${month.month.toString().padLeft(2, '0')}";
     final db = await NewDBHelper.db;

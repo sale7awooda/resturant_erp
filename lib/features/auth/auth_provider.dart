@@ -1,45 +1,102 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:starter_template/features/auth/auth_models.dart';
 import 'auth_dao.dart';
+import 'auth_models.dart';
 
-class AuthState {
-  final UserModel? user;
-  final bool isLoading;
-  final String? error;
+/// Provides the singleton AuthService instance as a Riverpod provider
+final authProvider = ChangeNotifierProvider<AuthService>((ref) {
+  return AuthService();
+});
 
-  AuthState({this.user, this.isLoading = false, this.error});
+class AuthService extends ChangeNotifier {
+  UserModel? _currentUser;
+  List<String> _permissions = [];
 
-  AuthState copyWith({UserModel? user, bool? isLoading, String? error}) {
-    return AuthState(
-      user: user ?? this.user,
-      isLoading: isLoading ?? this.isLoading,
-      error: error,
+  // Singleton pattern
+  static final AuthService _instance = AuthService._internal();
+  factory AuthService() => _instance;
+  AuthService._internal();
+
+  /// Current logged-in user
+  UserModel? get user => _currentUser;
+
+  /// True if a user is logged in
+  bool get loggedIn => _currentUser != null;
+
+  /// Cached permissions for the current user
+  List<String> get permissions => List.unmodifiable(_permissions);
+
+  /// Load user by ID (e.g., app start persistence)
+  Future<void> loadUserById(int id) async {
+    final user = await AuthDao.getUserById(id);
+    if (user != null) {
+      _currentUser = user;
+      await _loadPermissions();
+    } else {
+      _currentUser = null;
+      _permissions = [];
+    }
+    notifyListeners();
+  }
+
+  /// Login by username and password
+  Future<bool> login({required String username, required String password}) async {
+    final authenticated = await AuthDao.authenticate(username, password);
+    if (!authenticated) return false;
+
+    final user = await AuthDao.getUserByUsername(username);
+    if (user != null) {
+      _currentUser = user;
+      await _loadPermissions();
+      notifyListeners();
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Register a new user
+  /// Does NOT automatically log in
+  Future<int> register({
+    required String username,
+    String? email,
+    required String password,
+    int? roleId,
+  }) async {
+    return await AuthDao.registerUser(
+      username: username,
+      email: email,
+      password: password,
+      roleId: roleId,
     );
   }
-}
 
-class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(AuthState());
+  /// Logout current user
+  Future<void> logout() async {
+    _currentUser = null;
+    _permissions = [];
+    notifyListeners();
+  }
 
-  Future<void> login(String email, String password) async {
-    state = state.copyWith(isLoading: true, error: null);
-
-    final valid = await AuthDAO.validateLogin(email, password);
-    if (!valid) {
-      state = state.copyWith(isLoading: false, error: 'Invalid credentials');
+  /// Reload role permissions for current user
+  Future<void> _loadPermissions() async {
+    if (_currentUser == null) {
+      _permissions = [];
       return;
     }
 
-    final userMap = await AuthDAO.getUserByEmail(email);
-    final user = UserModel.fromMap(userMap!);
-    state = state.copyWith(user: user, isLoading: false);
+    final role = await AuthDao.getRoleById(_currentUser!.roleId ?? -1);
+    if (role == null || role.permissions == null || role.permissions!.isEmpty) {
+      _permissions = [];
+    } else {
+      _permissions = AuthDao.parsePermissions(role.permissions!);
+    }
   }
 
-  void logout() {
-    state = AuthState();
+  /// Check if the current user has a specific permission
+  /// Uses cached permissions
+  bool hasPermission(String permissionKey) {
+    if (!loggedIn) return false;
+    return _permissions.contains(permissionKey);
   }
 }
-
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>(
-  (ref) => AuthNotifier(),
-);

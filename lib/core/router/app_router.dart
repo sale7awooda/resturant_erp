@@ -1,5 +1,9 @@
+// lib/core/app_router.dart
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:starter_template/features/auth/auth_provider.dart';
+import 'package:starter_template/features/auth/login_screen.dart';
 import 'package:starter_template/features/dashboard/dashboard_screen.dart';
 import 'package:starter_template/features/inventory/inventory_screen.dart';
 import 'package:starter_template/features/logs/logs_screen.dart';
@@ -10,42 +14,118 @@ import 'package:starter_template/features/reports/reports_screen.dart';
 import 'package:starter_template/features/settings/settings_screen.dart';
 import 'package:starter_template/features/sidemenu/sidemenu_widget.dart';
 import 'package:starter_template/features/staff/staff_screen.dart';
-import '../../features/auth/splash_screen.dart';
 
-final goRouter = GoRouter(initialLocation: '/dashboard', routes: [
-  ShellRoute(
-      builder: (context, state, child) => MainLayout(child: child),
-      routes: [
-        GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-        GoRoute(
-            path: '/dashboard', builder: (_, __) => const DashboardScreen()),
-        GoRoute(path: '/menu', builder: (_, __) => MenuScreen()),
-        GoRoute(path: '/orders', builder: (_, __) => const OrdersScreen()),
+/// GoRouter provider (Riverpod-aware)
+final goRouterProvider = Provider<GoRouter>((ref) {
+  final auth = ref.watch(authProvider);
 
-        // New dynamic route for OrderDetailsScreen
-        GoRoute(
-          path: '/order-details/:id',
-          builder: (context, state) {
-            // final id = int.tryParse(state.pathParameters['id'] ?? '');
-            final id = state.pathParameters['id'] ?? ''; // fallback
-            return OrderDetailsScreen(specialOrderId: id);
+  return GoRouter(
+    initialLocation: '/login',
+    refreshListenable: auth, // listen to AuthService changes
+    redirect: (BuildContext context, GoRouterState state) {
+      final loggedIn = auth.loggedIn;
+      final loggingIn = state.location == '/login';
+
+      // If not logged in → only allow /login
+      if (!loggedIn && !loggingIn) return '/login';
+
+      // If logged in and trying to go to login → go dashboard
+      if (loggedIn && loggingIn) return '/dashboard';
+
+      return null;
+    },
+    routes: [
+      // 🔹 LOGIN (outside shell)
+      GoRoute(
+        path: '/login',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const LoginScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
           },
         ),
+      ),
 
-        GoRoute(path: '/reports', builder: (_, __) => const ReportsScreen()),
-        GoRoute(
-            path: '/inventory', builder: (_, __) => const InventoryScreen()),
-        GoRoute(path: '/staff', builder: (_, __) => const StaffScreen()),
-        GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
-        GoRoute(path: '/logs', builder: (_, __) => const LogsScreen())
-      ])
-]); // Provide the current route location (String, not GoRouter)
-final currentRouteProvider = Provider<String>((ref) {
-  return goRouter.location; // <-- String like "/dashboard"
+      // 🔹 AUTHENTICATED AREA
+      ShellRoute(
+        builder: (context, state, child) => MainLayout(child: child),
+        routes: [
+          GoRoute(
+            path: '/dashboard',
+            pageBuilder: (context, state) =>
+                _fadePage(state, const DashboardScreen()),
+          ),
+          GoRoute(
+            path: '/menu',
+            pageBuilder: (context, state) => _fadePage(state, MenuScreen()),
+          ),
+          GoRoute(
+            path: '/orders',
+            pageBuilder: (context, state) =>
+                _fadePage(state, const OrdersScreen()),
+          ),
+          GoRoute(
+            path: '/order-details/:id',
+            pageBuilder: (context, state) {
+              final id = state.pathParameters['id'] ?? '';
+              return _fadePage(
+                state,
+                OrderDetailsScreen(specialOrderId: id),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/reports',
+            pageBuilder: (context, state) =>
+                _fadePage(state, const ReportsScreen()),
+          ),
+          GoRoute(
+            path: '/inventory',
+            pageBuilder: (context, state) =>
+                _fadePage(state, const InventoryScreen()),
+          ),
+          GoRoute(
+            path: '/staff',
+            pageBuilder: (context, state) =>
+                _fadePage(state, const StaffScreen()),
+          ),
+          GoRoute(
+            path: '/settings',
+            pageBuilder: (context, state) =>
+                _fadePage(state, const SettingsScreen()),
+          ),
+          GoRoute(
+            path: '/logs',
+            pageBuilder: (context, state) =>
+                _fadePage(state, const LogsScreen()),
+          ),
+        ],
+      ),
+    ],
+  );
 });
 
+/// Fade transition for all routes
+CustomTransitionPage _fadePage(GoRouterState state, Widget child) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(opacity: animation, child: child);
+    },
+  );
+}
+
+/// Current route as a Riverpod provider
+final currentRouteProvider = Provider<String>((ref) {
+  final router = ref.watch(goRouterProvider);
+  return router.location;
+});
+
+/// Enum for screens
 enum AppScreen {
-  splash,
+  login,
   dashboard,
   menu,
   orders,
@@ -55,9 +135,10 @@ enum AppScreen {
   staff,
   settings,
   logs,
-  unknown
+  unknown,
 }
 
+/// Map current route → AppScreen enum
 final currentScreenProvider = Provider<AppScreen>((ref) {
   final location = ref.watch(currentRouteProvider);
 
@@ -70,7 +151,7 @@ final currentScreenProvider = Provider<AppScreen>((ref) {
   if (location.startsWith('/staff')) return AppScreen.staff;
   if (location.startsWith('/settings')) return AppScreen.settings;
   if (location.startsWith('/logs')) return AppScreen.logs;
-  if (location.startsWith('/splash')) return AppScreen.splash;
+  if (location.startsWith('/login')) return AppScreen.login;
 
   return AppScreen.unknown;
 });

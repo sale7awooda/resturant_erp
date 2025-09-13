@@ -8,6 +8,7 @@ import 'package:month_picker_dialog/month_picker_dialog.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:starter_template/common/widgets/txt_widget.dart';
 import 'package:starter_template/core/constants.dart';
+import 'package:starter_template/features/staff/staff_dao.dart';
 import 'package:starter_template/features/staff/staff_details_screen.dart';
 import 'package:starter_template/features/staff/staff_model.dart';
 import 'package:starter_template/features/staff/staff_provider.dart';
@@ -392,34 +393,30 @@ class _StaffScreenState extends ConsumerState<StaffScreen>
     final today = DateTime.now();
     final dateStr = DateFormat('yyyy-MM-dd').format(today);
 
-    // Load existing attendance for today
-    final monthlyAttendance = await ref
-        .read(staffNotifierProvider)
-        .monthlyAttendance(year: today.year, month: today.month);
+    final notifier = ref.read(staffNotifierProvider);
 
+    // Load today's attendance from DB for all staff
+    final monthlyAttendance = await notifier.monthlyAttendance(
+      year: today.year,
+      month: today.month,
+    );
     final todayAttendance =
         monthlyAttendance.where((a) => a.date == dateStr).toList();
 
-    // Initialize status map for each staff and part
+    // Optimized status map: only store existing attendance or default to present
     final statusMap = {
       for (var staff in staffList)
         staff.id!: {
-          1: todayAttendance
-              .firstWhere((a) => a.staffId == staff.id && a.part == 1,
-                  orElse: () => StaffAttendanceModel(
-                      staffId: staff.id!,
-                      date: dateStr,
-                      part: 1,
-                      status: AttendanceStatus.present))
-              .status,
-          2: todayAttendance
-              .firstWhere((a) => a.staffId == staff.id && a.part == 2,
-                  orElse: () => StaffAttendanceModel(
-                      staffId: staff.id!,
-                      date: dateStr,
-                      part: 2,
-                      status: AttendanceStatus.present))
-              .status,
+          for (var part in [1, 2])
+            part: todayAttendance
+                .firstWhere((a) => a.staffId == staff.id && a.part == part,
+                    orElse: () => StaffAttendanceModel(
+                          staffId: staff.id!,
+                          date: DateFormat('yyyy-MM-dd').format(DateTime.now()),
+                          part: part,
+                          status: AttendanceStatus.absent,
+                        ))
+                .status
         }
     };
 
@@ -435,7 +432,6 @@ class _StaffScreenState extends ConsumerState<StaffScreen>
             height: 500.h,
             child: Column(
               children: [
-                // Part selector
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -453,7 +449,6 @@ class _StaffScreenState extends ConsumerState<StaffScreen>
                   ],
                 ),
                 const Divider(height: 16),
-                // Attendance list
                 Expanded(
                   child: ListView.separated(
                     separatorBuilder: (_, __) => const Divider(height: 12),
@@ -466,9 +461,11 @@ class _StaffScreenState extends ConsumerState<StaffScreen>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
-                            child: Text(staff.name,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600)),
+                            child: Text(
+                              staff.name,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600),
+                            ),
                           ),
                           Wrap(
                             spacing: 8,
@@ -501,17 +498,27 @@ class _StaffScreenState extends ConsumerState<StaffScreen>
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text('cancel'.tr())),
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('cancel'.tr()),
+            ),
             ElevatedButton.icon(
               icon: const Icon(Icons.save),
               label: Text('save'.tr()),
               onPressed: () async {
-                for (var part in [1, 2]) {
-                  await ref.read(staffNotifierProvider).recordAttendancePart(
-                    {for (var s in staffList) s.id!: statusMap[s.id!]![part]!},
-                    part,
-                  );
+                if (selectedPart == 1) {
+                  final part1Map = {
+                    for (var staff in staffList)
+                      staff.id!: statusMap[staff.id!]![1]!
+                  };
+                  await notifier.recordAttendancePart(part1Map, 1);
+                } else {
+                  for (var part in [1, 2]) {
+                    final partMap = {
+                      for (var staff in staffList)
+                        staff.id!: statusMap[staff.id!]![part]!
+                    };
+                    await notifier.recordAttendancePart(partMap, part);
+                  }
                 }
                 if (ctx.mounted) Navigator.pop(ctx);
               },
@@ -897,7 +904,6 @@ class LegendItem extends StatelessWidget {
 }
 
 // --------------------- BONUS/FINE TAB ---------------------
-
 class BonusFineTab extends ConsumerStatefulWidget {
   const BonusFineTab({super.key});
 
@@ -931,14 +937,24 @@ class _BonusFineTabState extends ConsumerState<BonusFineTab> {
       data: (staffList) {
         return Column(
           children: [
+            gapH8,
             SizedBox(
-              height: 160,
+              height: 150,
               child: _buildStaffSummaryList(staffList),
             ),
             const Divider(thickness: 1),
             Expanded(
               child: selectedStaff == null
-                  ? Center(child: Text('tap_staff_card'.tr()))
+                  ? Center(
+                      child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.info_outline_rounded,
+                            size: 65, color: clrLightBlack),
+                        TxtWidget(
+                            txt: 'tap any staff card for details', fontsize: 20)
+                      ],
+                    ))
                   : _buildStaffDetails(selectedStaff!),
             ),
           ],
@@ -952,20 +968,11 @@ class _BonusFineTabState extends ConsumerState<BonusFineTab> {
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       itemCount: staffList.length,
-      separatorBuilder: (_, __) => const SizedBox(width: 12),
+      separatorBuilder: (_, __) => const SizedBox(width: 10),
       itemBuilder: (ctx, i) {
         final staff = staffList[i];
-        // final monthlyDataAsync = ref.watch(
-        //   staffMonthlyDataProvider({
-        //     'staffId': staff.id!,
-        //     'month': DateTime.now(),
-        //   }),
-        // );
-        final monthlyDataAsync = ref.watch(
-          staffMonthlyDataProvider(
-            StaffMonthlyParams(staffId: staff.id!, month: DateTime.now()),
-          ),
-        );
+        final monthlyDataAsync = ref.watch(staffMonthlyDataProvider(
+            StaffMonthlyParams(staffId: staff.id!, month: DateTime.now())));
 
         return monthlyDataAsync.when(
           loading: () => _loadingCard(staff.name),
@@ -974,7 +981,8 @@ class _BonusFineTabState extends ConsumerState<BonusFineTab> {
             final bonus = data['bonus'] ?? 0.0;
             final fine = data['fine'] ?? 0.0;
             final net = (staff.salary + bonus - fine);
-            return GestureDetector(
+            return InkWell(
+              borderRadius: BorderRadius.circular(15),
               onTap: () => _onStaffSelected(staff),
               child: _summaryCard(
                 staff.name,
@@ -991,18 +999,14 @@ class _BonusFineTabState extends ConsumerState<BonusFineTab> {
   }
 
   Widget _buildStaffDetails(StaffModel staff) {
-    final detailsFuture = ref.watch(
-      
-  staffMonthlyDataProvider(
-    StaffMonthlyParams(staffId: staff.id!, month:DateTime.now()
-  ),
-).future);
+    final detailsFuture = ref.watch(staffMonthlyDataProvider(
+      StaffMonthlyParams(staffId: staff.id!, month: DateTime.now()),
+    ).future);
 
-      // staffMonthlyDataProvider({
-      //   'staffId': staff.id!,
-      //   'month': DateTime.now(),
-      // }).future,
-    
+    // staffMonthlyDataProvider({
+    //   'staffId': staff.id!,
+    //   'month': DateTime.now(),
+    // }).future,
 
     return FutureBuilder<Map<String, dynamic>>(
       future: detailsFuture,
@@ -1058,17 +1062,45 @@ class _BonusFineTabState extends ConsumerState<BonusFineTab> {
 
   Map<String, List<StaffDetailItem>> _generateGroupedRows(
       StaffModel staff, Map<String, dynamic> data) {
-    // For simplicity, only generating current month summary
-    final bonus = data['bonus'] ?? 0.0;
-    final fine = data['fine'] ?? 0.0;
-    final monthKey =
-        '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}';
+    final now = DateTime.now();
+    final monthKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    final items = <StaffDetailItem>[];
 
-    final items = <StaffDetailItem>[
+    // Bonuses
+    for (final row in (data['bonusRows'] as List<Map<String, Object?>>)) {
+      final createdAt = DateTime.parse(row['createdAt'] as String);
+      items.add(
+        StaffDetailItem(
+          'Bonus',
+          'Bonus on day ${createdAt.day}',
+          amount: (row['amount'] as num).toDouble(),
+          day: createdAt.day, // ✅ store day
+        ),
+      );
+    }
+
+    // Fines
+    for (final row in (data['fineRows'] as List<Map<String, Object?>>)) {
+      final createdAt = DateTime.parse(row['createdAt'] as String);
+      items.add(
+        StaffDetailItem(
+          'Fine',
+          'Fine on day ${createdAt.day}',
+          amount: (row['amount'] as num).toDouble(),
+          day: createdAt.day, // ✅ store day
+        ),
+      );
+    }
+
+    // Summary
+    final bonus = (data['bonus'] as double);
+    final fine = (data['fine'] as double);
+    items.add(
       StaffDetailItem.summary(
-        'Bonuses: ${bonus.round()} | Fines: ${fine.round()} | Net: ${(staff.salary + bonus - fine).round()}',
+        'Bonuses: ${bonus.round()} | Fines: ${fine.round()} | '
+        'Net: ${(staff.salary + bonus - fine).round()}',
       ),
-    ];
+    );
 
     return {monthKey: items};
   }
@@ -1098,15 +1130,16 @@ class _BonusFineTabState extends ConsumerState<BonusFineTab> {
     return Card(
       elevation: isSelected ? 6 : 2,
       color: isSelected ? Colors.blue.shade50 : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: SizedBox(
         width: 160,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(5),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(name,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 14)),
               const SizedBox(height: 6),
@@ -1135,17 +1168,14 @@ class _BonusFineTabState extends ConsumerState<BonusFineTab> {
     final fineMap = <int, double>{};
 
     for (final b in items.where((i) => i.type == 'Bonus')) {
-      final match = RegExp(r'Day (\d+)').firstMatch(b.description);
-      if (match != null) {
-        final day = int.parse(match.group(1)!);
-        bonusMap[day] = (bonusMap[day] ?? 0) + (b.amount ?? 0);
+      if (b.day != null) {
+        bonusMap[b.day!] = (bonusMap[b.day!] ?? 0) + (b.amount ?? 0);
       }
     }
+
     for (final f in items.where((i) => i.type == 'Fine')) {
-      final match = RegExp(r'Day (\d+)').firstMatch(f.description);
-      if (match != null) {
-        final day = int.parse(match.group(1)!);
-        fineMap[day] = (fineMap[day] ?? 0) + (f.amount ?? 0);
+      if (f.day != null) {
+        fineMap[f.day!] = (fineMap[f.day!] ?? 0) + (f.amount ?? 0);
       }
     }
 
@@ -1178,17 +1208,19 @@ class _BonusFineTabState extends ConsumerState<BonusFineTab> {
 
 /// ===================== Data Wrappers =====================
 class StaffDetailItem {
-  final String? type;
+  final String? type; // "Bonus" | "Fine" | null for summary
   final String description;
   final double? amount;
+  final int? day; // <-- new: store the actual day
   final bool isSummary;
 
-  StaffDetailItem(this.type, this.description, {this.amount})
+  StaffDetailItem(this.type, this.description, {this.amount, this.day})
       : isSummary = false;
 
   StaffDetailItem.summary(this.description)
       : type = null,
         amount = null,
+        day = null,
         isSummary = true;
 }
 

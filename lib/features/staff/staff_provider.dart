@@ -133,7 +133,7 @@ class StaffNotifier {
     final monthPrefix = '$year-${m.toString().padLeft(2, '0')}%';
     final db = await NewDBHelper.db;
 
-    // Attendance
+    // Attendance (already handled)
     final attendanceRows = await db.query(
       'staffAttendance',
       where: 'staffId=? AND date LIKE ?',
@@ -159,14 +159,12 @@ class StaffNotifier {
       }
     }
 
-    // Bonuses
+    // Bonuses (fetch all rows, not just totals)
     final bonusRows = await db.query(
       'staffBonus',
       where: 'staffId=? AND strftime("%Y-%m", createdAt)=?',
       whereArgs: [staffId, "$year-${m.toString().padLeft(2, '0')}"],
     );
-    final totalBonus = bonusRows.fold<double>(
-        0, (sum, r) => sum + (r['amount'] as num).toDouble());
 
     // Fines
     final fineRows = await db.query(
@@ -174,13 +172,15 @@ class StaffNotifier {
       where: 'staffId=? AND strftime("%Y-%m", createdAt)=?',
       whereArgs: [staffId, "$year-${m.toString().padLeft(2, '0')}"],
     );
-    final totalFine = fineRows.fold<double>(
-        0, (sum, r) => sum + (r['amount'] as num).toDouble());
 
     return {
       'attendance': {'present': present, 'late': late, 'absent': absent},
-      'bonus': totalBonus,
-      'fine': totalFine,
+      'bonus': bonusRows.fold<double>(
+          0, (sum, r) => sum + (r['amount'] as num).toDouble()),
+      'fine': fineRows.fold<double>(
+          0, (sum, r) => sum + (r['amount'] as num).toDouble()),
+      'bonusRows': bonusRows,
+      'fineRows': fineRows,
     };
   }
 
@@ -188,111 +188,25 @@ class StaffNotifier {
     Map<int, AttendanceStatus> statusMap,
     int part,
   ) async {
-    final staffList = await StaffDao.getAllStaff();
     final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final db = await NewDBHelper.db;
+    // final db = await NewDBHelper.db;
 
-    await db.transaction((txn) async {
-      final batch = txn.batch();
+    // Convert the map to attendance models
+    final list = statusMap.entries.map((entry) {
+      return StaffAttendanceModel(
+        staffId: entry.key,
+        date: date,
+        part: part,
+        status: entry.value,
+        createdAt: DateTime.now(),
+      );
+    }).toList();
 
-      for (final staff in staffList) {
-        final status = statusMap[staff.id!] ?? AttendanceStatus.absent;
-        batch.rawInsert(
-          '''
-          INSERT INTO staffAttendance (staffId, date, part, status, createdAt)
-          VALUES (?, ?, ?, ?, ?)
-          ON CONFLICT(staffId, date, part) 
-          DO UPDATE SET status=excluded.status, createdAt=excluded.createdAt
-          ''',
-          [
-            staff.id!,
-            date,
-            part,
-            status.index,
-            DateTime.now().toIso8601String()
-          ],
-        );
-      }
-
-      await batch.commit(noResult: true);
-    });
-
-    if (part == 2) {
-      await _applyAutomaticAbsenceFines(staffList, date);
-    }
+    // Save and recalc fines for this day only
+    await StaffDao.upsertAttendanceBatch(list);
 
     ref.invalidate(staffListProvider);
     ref.invalidate(monthlyAttendanceProvider);
-  }
-
-  Future<void> _applyAutomaticAbsenceFines(
-    List<StaffModel> staffList,
-    String date,
-  ) async {
-    final db = await NewDBHelper.db;
-    final rows = await db.query(
-      'staffAttendance',
-      where: 'date = ?',
-      whereArgs: [date],
-    );
-
-    final grouped = <int, Map<int, StaffAttendanceModel>>{};
-    for (final r in rows) {
-      final rec = StaffAttendanceModel.fromMap(r);
-      grouped.putIfAbsent(rec.staffId, () => {})[rec.part] = rec;
-    }
-
-    final batch = db.batch();
-    final now = DateTime.now().toIso8601String();
-
-    for (final staff in staffList) {
-      final p1 = grouped[staff.id]?[1] ??
-          StaffAttendanceModel(
-            staffId: staff.id!,
-            date: date,
-            part: 1,
-            status: AttendanceStatus.absent,
-          );
-      final p2 = grouped[staff.id]?[2] ??
-          StaffAttendanceModel(
-            staffId: staff.id!,
-            date: date,
-            part: 2,
-            status: AttendanceStatus.absent,
-          );
-
-      final dailySalary = staff.salary / 30.0;
-      double fineAmount = 0;
-      String reason = '';
-
-      if (p1.status == AttendanceStatus.absent &&
-          p2.status == AttendanceStatus.absent) {
-        fineAmount = dailySalary;
-        reason = 'Full day absent automatic deduction';
-      } else if (p1.status == AttendanceStatus.absent ||
-          p2.status == AttendanceStatus.absent ||
-          (p1.status == AttendanceStatus.late &&
-              p2.status == AttendanceStatus.late)) {
-        fineAmount = dailySalary / 2.0;
-        reason = 'Half day absence/late automatic deduction';
-      }
-
-      if (fineAmount > 0) {
-        batch.insert(
-          'staffFines',
-          {
-            'staffId': staff.id!,
-            'amount': fineAmount,
-            'reason': reason,
-            'type': 'automatic',
-            'createdAt': now,
-          },
-        );
-      }
-    }
-
-    await batch.commit(noResult: true);
-
     ref.invalidate(payrollReportProvider);
     ref.invalidate(payrollCostProvider);
   }

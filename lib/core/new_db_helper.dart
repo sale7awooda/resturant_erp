@@ -1,3 +1,4 @@
+// lib/core/new_db_helper.dart
 import 'dart:io';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -30,7 +31,7 @@ class NewDBHelper {
   static Future<void> _createTables(Database db) async {
     // --- CART ---
     await db.execute('''
-      CREATE TABLE cart (
+      CREATE TABLE IF NOT EXISTS cart (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         itemId TEXT NOT NULL,
         name TEXT NOT NULL,
@@ -47,7 +48,7 @@ class NewDBHelper {
 
     // --- ORDERS ---
     await db.execute('''
-      CREATE TABLE orders (
+      CREATE TABLE IF NOT EXISTS orders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         orderType TEXT NOT NULL,
         orderStatus TEXT NOT NULL,
@@ -69,7 +70,7 @@ class NewDBHelper {
 
     // --- LOGS ---
     await db.execute('''
-      CREATE TABLE logs (
+      CREATE TABLE IF NOT EXISTS logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         action TEXT NOT NULL,
         entity TEXT NOT NULL,
@@ -82,7 +83,7 @@ class NewDBHelper {
 
     // --- MENU ITEMS ---
     await db.execute('''
-      CREATE TABLE menuItems (
+      CREATE TABLE IF NOT EXISTS menuItems (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         price REAL NOT NULL,
@@ -95,7 +96,7 @@ class NewDBHelper {
 
     // --- ORDER ITEMS ---
     await db.execute('''
-      CREATE TABLE orderItems (
+      CREATE TABLE IF NOT EXISTS orderItems (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         orderId INTEGER NOT NULL,
         menuItemId TEXT NOT NULL,
@@ -107,107 +108,126 @@ class NewDBHelper {
         FOREIGN KEY(menuItemId) REFERENCES menuItems(id) ON DELETE CASCADE
       )
     ''');
-// --- STAFF ---
+
+    // --- STAFF ---
     await db.execute('''
-  CREATE TABLE staff (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE,
-    phone TEXT UNIQUE,
-    role TEXT NOT NULL,
-    permissions TEXT,
-    salary REAL DEFAULT 0,
-    age INTEGER,
-    address TEXT,
-    gender TEXT DEFAULT 'male', -- male/female
-    active INTEGER DEFAULT 1,
-    createdAt TEXT NOT NULL,
-    updatedAt TEXT
-  )
-''');
+      CREATE TABLE IF NOT EXISTS staff (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE,
+        phone TEXT UNIQUE,
+        role TEXT NOT NULL,
+        permissions TEXT,
+        salary REAL DEFAULT 0,
+        age INTEGER,
+        address TEXT,
+        gender TEXT DEFAULT 'male',
+        active INTEGER DEFAULT 1,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT
+      )
+    ''');
 
-// --- STAFF ATTENDANCE ---
+    // --- STAFF ATTENDANCE ---
     await db.execute('''
-  CREATE TABLE staffAttendance (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    staffId INTEGER NOT NULL,
-    date TEXT NOT NULL,
-    part INTEGER NOT NULL,
-    status INTEGER NOT NULL, -- 0=absent, 1=present, 2=late
-    createdAt TEXT NOT NULL,
-    FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE,
-    UNIQUE(staffId, date, part) ON CONFLICT REPLACE
-  )
-''');
+      CREATE TABLE IF NOT EXISTS staffAttendance (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        staffId INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        part INTEGER NOT NULL,
+        status INTEGER NOT NULL,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE,
+        UNIQUE(staffId, date, part) ON CONFLICT REPLACE
+      )
+    ''');
 
-// --- STAFF BONUS ---
+    // --- STAFF BONUS ---
     await db.execute('''
-  CREATE TABLE staffBonus (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    staffId INTEGER NOT NULL,
-    amount REAL NOT NULL,
-    reason TEXT,
-    createdAt TEXT NOT NULL,
-    FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE
-  )
-''');
+      CREATE TABLE IF NOT EXISTS staffBonus (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        staffId INTEGER NOT NULL,
+        amount REAL NOT NULL,
+        reason TEXT,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE
+      )
+    ''');
 
-// --- STAFF FINES ---
+    // --- STAFF FINES ---
     await db.execute('''
-  CREATE TABLE staffFines (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    staffId INTEGER NOT NULL,
-    amount REAL NOT NULL,
-    reason TEXT,
-    type TEXT DEFAULT 'automatic',
-    createdAt TEXT NOT NULL,
-    FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE,
-    UNIQUE(staffId, type, reason) ON CONFLICT REPLACE
-  )
-''');
+      CREATE TABLE IF NOT EXISTS staffFines (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        staffId INTEGER NOT NULL,
+        amount REAL NOT NULL,
+        reason TEXT,
+        type TEXT DEFAULT 'automatic',
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE,
+        UNIQUE(staffId, type, reason) ON CONFLICT REPLACE
+      )
+    ''');
 
-// --- STAFF LOANS ---
-await db.execute('''
-  CREATE TABLE staffLoans (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    staffId INTEGER NOT NULL,
-    amount REAL NOT NULL,
-    reason TEXT,
-    createdAt TEXT NOT NULL,
-    repaid INTEGER DEFAULT 0, -- 0=not fully repaid, 1=done
-    FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE
-  )
-''');
+    // --- STAFF LOANS ---
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS staffLoans (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        staffId INTEGER NOT NULL,
+        amount REAL NOT NULL,
+        reason TEXT,
+        createdAt TEXT NOT NULL,
+        repaid INTEGER DEFAULT 0,
+        FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE
+      )
+    ''');
 
-// --- STAFF PAYROLL ---
-await db.execute('''
-  CREATE TABLE staffPayroll (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    staffId INTEGER NOT NULL,
-    month TEXT NOT NULL, -- yyyy-MM
-    baseSalary REAL NOT NULL,
-    bonus REAL DEFAULT 0,
-    fines REAL DEFAULT 0,
-    loans REAL DEFAULT 0,
-    netPayable REAL NOT NULL,
-    createdAt TEXT NOT NULL,
-    FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE,
-    UNIQUE(staffId, month) ON CONFLICT REPLACE
-  )
-''');
+    // --- STAFF PAYROLL ---
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS staffPayroll (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        staffId INTEGER NOT NULL,
+        month TEXT NOT NULL,
+        baseSalary REAL NOT NULL,
+        bonus REAL DEFAULT 0,
+        fines REAL DEFAULT 0,
+        loans REAL DEFAULT 0,
+        netPayable REAL NOT NULL,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE CASCADE,
+        UNIQUE(staffId, month) ON CONFLICT REPLACE
+      )
+    ''');
 
     // --- ROLES ---
     await db.execute('''
-      CREATE TABLE roles (
+      CREATE TABLE IF NOT EXISTS roles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         roleName TEXT UNIQUE NOT NULL,
         permissions TEXT
       )
     ''');
 
+    // --- USERS (AUTH) ---
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE,
+        passwordHash TEXT NOT NULL,
+        salt TEXT NOT NULL,
+        roleId INTEGER,
+        staffId INTEGER,
+        active INTEGER DEFAULT 1,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT,
+        FOREIGN KEY(roleId) REFERENCES roles(id) ON DELETE SET NULL,
+        FOREIGN KEY(staffId) REFERENCES staff(id) ON DELETE SET NULL
+      )
+    ''');
+
     // --- CATEGORIES ---
     await db.execute('''
-      CREATE TABLE categories (
+      CREATE TABLE IF NOT EXISTS categories (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL
       )
@@ -215,7 +235,7 @@ await db.execute('''
 
     // --- TABLES ---
     await db.execute('''
-      CREATE TABLE tables (
+      CREATE TABLE IF NOT EXISTS tables (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL
       )
@@ -249,6 +269,10 @@ await db.execute('''
   }) async =>
       (await db)
           .query(table, where: where, whereArgs: whereArgs, orderBy: orderBy);
+
+  // run raw query if needed
+  static Future<List<Map<String, Object?>>> rawQuery(String sql, [List? args]) async =>
+      (await db).rawQuery(sql, args);
 
   // --- BACKUP / RESTORE ---
   static Future<String> exportDB() async {
